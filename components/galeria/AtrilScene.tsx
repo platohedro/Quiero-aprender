@@ -1,6 +1,13 @@
 "use client";
 
-import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   ContactShadows,
@@ -194,11 +201,82 @@ function CharacterPlaceholder({
 function SceneContents({
   atrilModel,
   characters = [],
+  onFocusTargetChange,
 }: {
   atrilModel?: string;
   characters?: CharacterConfig[];
+  onFocusTargetChange?: (target: [number, number, number]) => void;
 }) {
   const [atrilHeight, setAtrilHeight] = useState<number | null>(null);
+  const [characterHeights, setCharacterHeights] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    setCharacterHeights((prev) => {
+      const allowedIds = new Set(characters.map((c) => c.id));
+      let changed = false;
+      const next: Record<string, number> = {};
+      for (const id of allowedIds) {
+        if (prev[id] !== undefined) {
+          next[id] = prev[id];
+        }
+      }
+      if (Object.keys(prev).length !== Object.keys(next).length) {
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [characters]);
+
+  const updateCharacterHeight = useCallback((id: string, height: number) => {
+    if (!Number.isFinite(height)) {
+      return;
+    }
+    setCharacterHeights((prev) => {
+      const previous = prev[id];
+      if (previous !== undefined && Math.abs(previous - height) < 1e-4) {
+        return prev;
+      }
+      return { ...prev, [id]: height };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!onFocusTargetChange) {
+      return;
+    }
+
+    const baseHeight = atrilHeight ?? 0;
+    let minY = 0;
+    let maxY = baseHeight;
+
+    characters.forEach((character) => {
+      const recordedHeight = characterHeights[character.id];
+      if (!recordedHeight) {
+        return;
+      }
+
+      const defaultY = atrilHeight !== null ? atrilHeight + 0.02 : 1.22;
+      const position = character.position ?? [0, defaultY, 0];
+      const alignBottom = character.alignBottom ?? false;
+
+      const minCandidate = alignBottom
+        ? position[1]
+        : position[1] - recordedHeight / 2;
+      const maxCandidate = alignBottom
+        ? position[1] + recordedHeight
+        : position[1] + recordedHeight / 2;
+
+      minY = Math.min(minY, minCandidate);
+      maxY = Math.max(maxY, maxCandidate);
+    });
+
+    if (maxY <= minY) {
+      maxY = minY + 0.5;
+    }
+
+    const centerY = (minY + maxY) / 2;
+    onFocusTargetChange([0, centerY, 0]);
+  }, [atrilHeight, characterHeights, characters, onFocusTargetChange]);
 
   return (
     <>
@@ -241,6 +319,10 @@ function SceneContents({
                 rotation={character.rotation ?? [0, 0, 0]}
                 alignBottom={character.alignBottom}
                 fitHeight={character.fitHeight}
+                onBoundsComputed={({ box, finalScale }) => {
+                  const height = (box.max.y - box.min.y) * finalScale;
+                  updateCharacterHeight(character.id, height);
+                }}
               />
             ) : (
               <CharacterPlaceholder
@@ -276,27 +358,95 @@ export default function AtrilScene({
   const resolvedAtrilModel = shouldRenderAtril
     ? atrilModel ?? "/3d/atril.fbx"
     : undefined;
+  const [focusTarget, setFocusTarget] = useState<[number, number, number]>([0, 1.35, 0]);
 
   return (
     <div className="relative h-[420px] w-full overflow-hidden rounded-3xl border border-slate-200 bg-slate-900">
       <Canvas
         shadows
-        camera={{ position: [3.5, 2.2, 4.8], fov: 38 }}
+        camera={{ position: [1.1, 2.4, 5.2], fov: 32 }}
         dpr={[1, 1.8]}
       >
-        <color attach="background" args={["#020617"]} />
-        <hemisphereLight intensity={0.5} groundColor="#0f172a" color="#f8fafc" />
+        <color attach="background" args={["#06080d"]} />
+        <ambientLight intensity={0.25} color="#f4f7ff" />
+        <hemisphereLight intensity={0.85} groundColor="#0f172a" color="#f1f5f9" />
         <directionalLight
           castShadow
           position={[5.5, 6.5, 4]}
-          intensity={1.4}
+          intensity={2.6}
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
+        <directionalLight
+          position={[-4.5, 5.5, -3.8]}
+          intensity={0.7}
+          color="#fef3f5"
+        />
+        <spotLight
+          castShadow
+          position={[-3.2, 4.8, 2.2]}
+          angle={Math.PI / 6}
+          penumbra={0.6}
+          intensity={3.1}
+          color="#ffe1b0"
+          distance={16}
+          decay={1.05}
+          shadow-bias={-0.00016}
+        />
+        <spotLight
+          castShadow
+          position={[3.2, 4.8, 2.2]}
+          angle={Math.PI / 6}
+          penumbra={0.6}
+          intensity={3.1}
+          color="#cfe6ff"
+          distance={16}
+          decay={1.05}
+          shadow-bias={-0.00016}
+        />
+        <spotLight
+          position={[0, 5.8, -3.5]}
+          angle={Math.PI / 5}
+          penumbra={0.45}
+          intensity={1.9}
+          color="#f0f4ff"
+          distance={20}
+          decay={1.05}
+        />
+        <spotLight
+          castShadow
+          position={[0, 6.4, 1.4]}
+          angle={Math.PI / 7}
+          penumbra={0.5}
+          intensity={3.6}
+          color="#fff0d6"
+          distance={14}
+          decay={1.02}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+          shadow-bias={-0.00012}
+        >
+          <object3D position={[0, focusTarget[1] + 0.4, 0]} />
+        </spotLight>
+        <spotLight
+          position={[0, 2.2, -4.8]}
+          angle={Math.PI / 4}
+          penumbra={0.35}
+          intensity={1.2}
+          color="#bcd7ff"
+          distance={22}
+          decay={1.1}
+        >
+          <object3D position={[0, focusTarget[1], 0]} />
+        </spotLight>
 
         <Suspense fallback={null}>
           <LoadingBackdrop />
-          <SceneContents atrilModel={resolvedAtrilModel} characters={characters} />
+          <SceneContents
+            atrilModel={resolvedAtrilModel}
+            characters={characters}
+            onFocusTargetChange={setFocusTarget}
+          />
           <Environment preset="studio" />
         </Suspense>
 
@@ -315,6 +465,7 @@ export default function AtrilScene({
           maxPolarAngle={Math.PI / 1.8}
           autoRotate={autoRotate}
           autoRotateSpeed={0.4}
+          target={focusTarget}
         />
       </Canvas>
 

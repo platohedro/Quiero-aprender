@@ -13,6 +13,10 @@ type PersonajeEscena = {
   rotation?: [number, number, number];
   scale?: number;
   fitHeight?: number;
+  ficha?: {
+    titulo: string;
+    descripcion: string;
+  }[];
 };
 
 const MOCK_PERSONAJES: Personaje[] = [
@@ -33,8 +37,45 @@ export default function GaleriaPersonajes() {
         descripcion: "Modelo inicial de prueba para la vitrina 3D.",
         model: "/3d/personajes/personaje1.fbx",
         scale: 9,
-        fitHeight: 4,
+        fitHeight: 2,
         rotation: [0, Math.PI * 0.05, 0] as [number, number, number],
+        ficha: [
+          {
+            titulo: "Orígenes",
+            descripcion: "Forjado en la constelación Boreal, trae historias tejidas con luz y viento fresco.",
+          },
+          {
+            titulo: "Talento Secreto",
+            descripcion: "Transforma melodías en colores que flotan alrededor del atril cuando se emociona.",
+          },
+          {
+            titulo: "Frase Favorita",
+            descripcion: '"Cuando el escenario respira, la imaginación despierta."',
+          },
+        ],
+      },
+      {
+        id: "personaje2",
+        nombre: "Segundo Personaje",
+        descripcion: "Nueva incorporación para iluminar la escena desde otra galaxia.",
+        model: "/3d/personajes/personaje2.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, -Math.PI * 0.06, 0] as [number, number, number],
+        ficha: [
+          {
+            titulo: "Misión",
+            descripcion: "Recolectar destellos de creatividad en cada presentación y guardarlos en su linterna espacial.",
+          },
+          {
+            titulo: "Compañeros",
+            descripcion: "Viaja con un coro de luciérnagas que sólo aparece cuando el público susurra su nombre.",
+          },
+          {
+            titulo: "Dato Curioso",
+            descripcion: "Nunca pisa el suelo sin antes saludar al atril; dice que es la puerta entre mundos.",
+          },
+        ],
       },
     ],
     [],
@@ -106,16 +147,23 @@ export default function GaleriaPersonajes() {
             </button>
           </div>
 
-          <p className="text-xs text-amber-800/70">
-            Los modelos deben guardarse en <code className="rounded bg-amber-100 px-1 py-0.5 text-xs">public/3d/personajes</code>. Ajusta escala, rotación y posición según cada personaje.
-          </p>
+          {personajeActivo?.ficha && (
+            <div className="space-y-3 pt-2">
+              {personajeActivo.ficha.map((item, index) => (
+                <div key={`${personajeActivo.id}-ficha-${index}`} className="rounded-xl border border-amber-200 bg-amber-100/60 p-3">
+                  <h4 className="text-sm font-semibold text-amber-900 tracking-wide uppercase">{item.titulo}</h4>
+                  <p className="mt-1 text-sm text-amber-900/80 leading-relaxed">{item.descripcion}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+         
         </div>
         <AtrilScene {...sceneConfig} />
       </div>
 
-      <p className="text-sm text-gray-600">
-        Mientras cargamos los modelos definitivos, mantenemos esta grilla de referencias para seguir imaginando personajes.
-      </p>
+  
       {/* <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {MOCK_PERSONAJES.map((p) => (
           <div key={p.id} className="rounded-2xl border shadow-md overflow-hidden bg-white">
