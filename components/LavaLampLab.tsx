@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import LavaShaderPanel from "@/components/lava/LavaShaderPanel";
 
 type Ingredient = {
   id: string;
@@ -46,9 +47,6 @@ const Z_LEVELS = {
 
 const WATER_HEIGHT_PX = 24;
 const OIL_HEIGHT_PX = 20;
-const WATER_TOP_OFFSET = `${WATER_HEIGHT_PX}px`;
-const OIL_BOTTOM_OFFSET = `${WATER_HEIGHT_PX}px`;
-const OIL_TOP_OFFSET = `${WATER_HEIGHT_PX + OIL_HEIGHT_PX}px`;
 
 const DYE_DROPS = [
   { left: '24%', top: '12px', delay: '0s' },
@@ -66,6 +64,37 @@ const DYE_SWIRLS = [
   { offset: 14, size: 24, delay: '1.8s' },
 ];
 
+const LAVA_BLOB_CLUSTERS = [
+  { width: 52, height: 64, baseLeft: 20, baseBottom: 26, duration: 7.2, delay: 0 },
+  { width: 44, height: 56, baseLeft: 48, baseBottom: 18, duration: 6.4, delay: 0.8 },
+  { width: 58, height: 68, baseLeft: 68, baseBottom: 30, duration: 8.1, delay: 1.3 },
+  { width: 38, height: 48, baseLeft: 32, baseBottom: 42, duration: 5.6, delay: 0.5 },
+  { width: 46, height: 60, baseLeft: 57, baseBottom: 44, duration: 6.9, delay: 1.7 },
+] as const;
+
+const LAVA_STREAMS = [
+  { left: 28, blur: 14, delay: 0 },
+  { left: 52, blur: 18, delay: 1.2 },
+  { left: 68, blur: 16, delay: 0.6 },
+] as const;
+
+const LAVA_SURFACE_RIPPLES = [
+  { width: '74%', delay: 0 },
+  { width: '62%', delay: 0.35 },
+  { width: '52%', delay: 0.7 },
+] as const;
+
+type FillKey = "water" | "oil" | "dye" | "tablet";
+
+const INITIAL_FILL: Record<FillKey, number> = {
+  water: 0,
+  oil: 0,
+  dye: 0,
+  tablet: 0,
+};
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
 export default function LavaLampLab() {
   const [ingredients, setIngredients] = useState<Ingredient[]>(INGREDIENTS);
   const [currentStep, setCurrentStep] = useState(0);
@@ -74,8 +103,85 @@ export default function LavaLampLab() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [message, setMessage] = useState('🌟 ¡Bienvenid@ a Lava Lab Junior! Empieza arrastrando el agua al frasco mágico.');
   const [droppingIngredient, setDroppingIngredient] = useState<string | null>(null);
+  const [recentIngredient, setRecentIngredient] = useState<string | null>(null);
+  const [lavaBurst, setLavaBurst] = useState(false);
+  const [fillProgress, setFillProgress] = useState<Record<FillKey, number>>(() => ({ ...INITIAL_FILL }));
 
   const dragItem = useRef<string | null>(null);
+  const recentIngredientTimer = useRef<number | null>(null);
+  const fillProgressRef = useRef<Record<FillKey, number>>({ ...INITIAL_FILL });
+  const fillAnimationsRef = useRef<Record<FillKey, number>>({
+    water: 0,
+    oil: 0,
+    dye: 0,
+    tablet: 0,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (recentIngredientTimer.current) {
+        window.clearTimeout(recentIngredientTimer.current);
+      }
+      Object.values(fillAnimationsRef.current).forEach((id) => {
+        if (id) {
+          cancelAnimationFrame(id);
+        }
+      });
+    };
+  }, []);
+
+  const startFillAnimation = useCallback(
+    (ingredient: FillKey) => {
+      const duration =
+        ingredient === "water" ? 1100 : ingredient === "oil" ? 1300 : ingredient === "dye" ? 900 : 1500;
+
+      if (fillAnimationsRef.current[ingredient]) {
+        cancelAnimationFrame(fillAnimationsRef.current[ingredient]);
+        fillAnimationsRef.current[ingredient] = 0;
+      }
+
+      const startValue = fillProgressRef.current[ingredient] ?? 0;
+      if (startValue >= 0.999) {
+        fillProgressRef.current = {
+          ...fillProgressRef.current,
+          [ingredient]: 1,
+        };
+        setFillProgress((prev) => ({
+          ...prev,
+          [ingredient]: 1,
+        }));
+        return;
+      }
+      let animationStart: number | null = null;
+
+      const step = (timestamp: number) => {
+        if (animationStart === null) {
+          animationStart = timestamp;
+        }
+        const elapsed = Math.min(1, (timestamp - animationStart) / duration);
+        const eased = startValue + (1 - startValue) * easeOutCubic(elapsed);
+
+        fillProgressRef.current = {
+          ...fillProgressRef.current,
+          [ingredient]: eased,
+        };
+
+        setFillProgress((prev) => ({
+          ...prev,
+          [ingredient]: eased,
+        }));
+
+        if (elapsed < 1) {
+          fillAnimationsRef.current[ingredient] = requestAnimationFrame(step);
+        } else {
+          fillAnimationsRef.current[ingredient] = 0;
+        }
+      };
+
+      fillAnimationsRef.current[ingredient] = requestAnimationFrame(step);
+    },
+    [],
+  );
 
   const handleDragStart = (e: React.DragEvent, ingredientId: string) => {
     dragItem.current = ingredientId;
@@ -93,18 +199,33 @@ export default function LavaLampLab() {
 
     const expectedIngredient = RECIPE_STEPS[currentStep]?.ingredient;
     
-    if (dragItem.current === expectedIngredient) {
+    const ingredientId = dragItem.current;
+
+    if (ingredientId === expectedIngredient) {
       // Correcto: agregar ingrediente con animación
-      setDroppingIngredient(dragItem.current);
+      setDroppingIngredient(ingredientId);
       
       // Delay para mostrar la animación de caída más fluida
       setTimeout(() => {
-        setJarContents(prev => [...prev, dragItem.current!]);
+        setJarContents(prev => (prev.includes(ingredientId) ? prev : [...prev, ingredientId]));
         setIngredients(prev => 
           prev.map(ing => 
-            ing.id === dragItem.current ? { ...ing, added: true } : ing
+            ing.id === ingredientId ? { ...ing, added: true } : ing
           )
         );
+
+        if (ingredientId === "water" || ingredientId === "oil" || ingredientId === "dye" || ingredientId === "tablet") {
+          startFillAnimation(ingredientId);
+        }
+
+        if (recentIngredientTimer.current) {
+          window.clearTimeout(recentIngredientTimer.current);
+        }
+        setRecentIngredient(ingredientId);
+        recentIngredientTimer.current = window.setTimeout(() => {
+          setRecentIngredient(null);
+          recentIngredientTimer.current = null;
+        }, 1800);
         
         const step = RECIPE_STEPS[currentStep];
         setMessage(`🎉 ${step.description} · ${step.effect}`);
@@ -116,6 +237,7 @@ export default function LavaLampLab() {
           setIsComplete(true);
           setShowAnimation(true);
           setMessage('🎊 ¡Experimento completado! Observa tu lámpara de lava brillante.');
+          setLavaBurst(true);
         }
         
         setDroppingIngredient(null);
@@ -138,50 +260,98 @@ export default function LavaLampLab() {
     setIsComplete(false);
     setShowAnimation(false);
     setDroppingIngredient(null);
+    setRecentIngredient(null);
+    setLavaBurst(false);
+    Object.values(fillAnimationsRef.current).forEach((id) => {
+      if (id) {
+        cancelAnimationFrame(id);
+      }
+    });
+    fillAnimationsRef.current = { ...INITIAL_FILL };
+    fillProgressRef.current = { ...INITIAL_FILL };
+    setFillProgress({ ...INITIAL_FILL });
+    if (recentIngredientTimer.current) {
+      window.clearTimeout(recentIngredientTimer.current);
+      recentIngredientTimer.current = null;
+    }
     setMessage('🌟 ¡Bienvenid@ a Lava Lab Junior! Empieza arrastrando el agua al frasco mágico.');
   };
 
   const renderJarContent = () => {
     const layers = [];
+    const waterLevel = fillProgress.water;
+    const oilLevel = fillProgress.oil;
+    const dyeLevel = fillProgress.dye;
+    const tabletLevel = fillProgress.tablet;
+    const waterHeight = WATER_HEIGHT_PX * Math.min(1, waterLevel);
+    const oilHeight = OIL_HEIGHT_PX * Math.min(1, oilLevel);
+    const oilBottomOffset = waterHeight;
+    const lavaBaseOffset = waterHeight + oilHeight;
     
     // SIEMPRE mostrar el agua si está en jarContents - BASE PERMANENTE
     if (jarContents.includes('water')) {
       layers.push(
         <div
-          key="water-base"
+          key="water-base-fill"
           className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-800 via-blue-700 to-blue-600 shadow-inner"
           style={{
             clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
             border: '2px solid rgba(59, 130, 246, 1)',
             borderBottom: 'none',
             height: `${WATER_HEIGHT_PX}px`,
+            transformOrigin: '50% 100%',
+            transform: `scaleY(${Math.max(0.04, waterLevel)})`,
+            opacity: 0.45 + waterLevel * 0.45,
+            transition: 'transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease-out',
             zIndex: Z_LEVELS.waterBase,
           }}
         />
       );
       
       // Ondas en el agua
-      layers.push(
-        <div
-          key="water-waves"
-          className="absolute left-0 right-0 bg-blue-400 animate-[waveEffect_2s_ease-in-out_infinite]"
-          style={{
-            bottom: WATER_TOP_OFFSET,
-            clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
-            height: '2px',
-            zIndex: Z_LEVELS.waterWaves,
-          }}
-        />
-      );
+      if (waterLevel > 0.08) {
+        layers.push(
+          <div
+            key="water-waves"
+            className="absolute left-0 right-0 bg-blue-400 animate-[waveEffect_2s_ease-in-out_infinite]"
+            style={{
+              bottom: `${Math.max(2, waterHeight - 2)}px`,
+              clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
+              height: '2px',
+              zIndex: Z_LEVELS.waterWaves,
+              opacity: 0.4 + waterLevel * 0.4,
+              transition: 'bottom 0.8s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease-out',
+            }}
+          />
+        );
+      }
       
       // Etiqueta del agua
-      layers.push(
-        <div key="water-label" className="absolute bottom-10 right-3 bg-blue-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg" style={{ zIndex: Z_LEVELS.labels }}>
-          💧 AGUA
-        </div>
-      );
+      if (waterLevel > 0.45) {
+        layers.push(
+          <div
+            key="water-label"
+            className="absolute right-3 bg-blue-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg transition-all duration-500"
+            style={{ bottom: `${Math.max(12, waterHeight + 6)}px`, zIndex: Z_LEVELS.labels, opacity: 0.5 + waterLevel * 0.5 }}
+          >
+            💧 AGUA
+          </div>
+        );
+      }
 
       if (droppingIngredient === 'water') {
+        layers.push(
+          <div
+            key="water-stream"
+            className="absolute inset-x-0 top-0 h-full pointer-events-none"
+            style={{ zIndex: Z_LEVELS.dropping }}
+          >
+            <div className="absolute left-1/2 top-[-8%] w-9 h-[120%] -translate-x-1/2 overflow-hidden">
+              <div className="absolute inset-x-2 top-[-10%] h-[130%] rounded-full bg-gradient-to-b from-blue-100/90 via-blue-400/80 to-transparent blur-[2px] animate-[waterPour_1.2s_ease-in_forwards]" />
+              <div className="absolute left-1/2 bottom-4 h-12 w-12 -translate-x-1/2 rounded-full bg-blue-300/70 blur-md animate-[waterImpact_1.1s_ease-out_forwards]" />
+            </div>
+          </div>
+        );
         layers.push(
           <div
             key="water-splash"
@@ -201,6 +371,31 @@ export default function LavaLampLab() {
           </div>
         );
       }
+
+      if (recentIngredient === 'water') {
+        layers.push(
+          <div
+            key="water-mix-waves"
+            className="absolute inset-x-0"
+            style={{
+              bottom: `${Math.max(4, waterHeight)}px`,
+              zIndex: Z_LEVELS.waterWaves,
+              transition: 'bottom 0.9s cubic-bezier(0.16,1,0.3,1)',
+            }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={`wave-pulse-${i}`}
+                className="absolute left-1/2 h-8 w-[85%] -translate-x-1/2 rounded-full border border-blue-300/60 animate-[wavePulse_1.8s_ease-out_forwards]"
+                style={{
+                  animationDelay: `${i * 0.22}s`,
+                  opacity: (0.25 + waterLevel * 0.6) * (0.7 - i * 0.2),
+                }}
+              />
+            ))}
+          </div>
+        );
+      }
     }
     
     // SIEMPRE mostrar el aceite si está en jarContents - FLOTA SOBRE AGUA
@@ -208,17 +403,27 @@ export default function LavaLampLab() {
       layers.push(
         <div
           key="oil-layer"
-          className="absolute left-0 right-0 bg-gradient-to-t from-amber-600 via-yellow-500 to-yellow-400 shadow-md"
+          className="absolute left-0 right-0"
           style={{
-            bottom: OIL_BOTTOM_OFFSET,
-            clipPath: 'polygon(14% 100%, 86% 100%, 83% 0%, 17% 0%)',
-            border: '2px solid rgba(245, 158, 11, 1)',
-            borderBottom: 'none',
-            borderTop: '3px solid rgba(245, 158, 11, 1)',
+            bottom: `${oilBottomOffset}px`,
             height: `${OIL_HEIGHT_PX}px`,
             zIndex: Z_LEVELS.oilLayer,
           }}
-        />
+        >
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-amber-600 via-yellow-500 to-yellow-400 shadow-md"
+            style={{
+              clipPath: 'polygon(14% 100%, 86% 100%, 83% 0%, 17% 0%)',
+              border: '2px solid rgba(245, 158, 11, 1)',
+              borderBottom: 'none',
+              borderTop: '3px solid rgba(245, 158, 11, 1)',
+              transformOrigin: '50% 100%',
+              transform: `scaleY(${Math.max(0.04, oilLevel)})`,
+              opacity: 0.4 + oilLevel * 0.5,
+              transition: 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.7s ease-out',
+            }}
+          />
+        </div>
       );
       
       // Línea de separación entre agua y aceite
@@ -227,10 +432,12 @@ export default function LavaLampLab() {
           key="oil-separator"
           className="absolute left-0 right-0 bg-orange-600 shadow-lg"
           style={{
-            bottom: OIL_BOTTOM_OFFSET,
+            bottom: `${Math.max(0, oilBottomOffset)}px`,
             clipPath: 'polygon(14% 100%, 86% 100%, 83% 0%, 17% 0%)',
             height: '2px',
             zIndex: Z_LEVELS.oilSeparator,
+            opacity: 0.35 + oilLevel * 0.4,
+            transition: 'bottom 1s cubic-bezier(0.16,1,0.3,1), opacity 0.7s ease-out',
           }}
         />
       );
@@ -240,7 +447,12 @@ export default function LavaLampLab() {
         <div
           key="oil-bubbles"
           className="absolute left-1/2 transform -translate-x-1/2"
-          style={{ bottom: OIL_TOP_OFFSET, zIndex: Z_LEVELS.oilBubbles }}
+          style={{
+            bottom: `${oilBottomOffset + Math.max(6, oilHeight)}px`,
+            zIndex: Z_LEVELS.oilBubbles,
+            opacity: 0.3 + oilLevel * 0.6,
+            transition: 'bottom 1s cubic-bezier(0.16,1,0.3,1), opacity 0.7s ease-out',
+          }}
         >
           {[...Array(3)].map((_, i) => (
             <div key={i} 
@@ -255,19 +467,43 @@ export default function LavaLampLab() {
       );
 
       // Etiqueta del aceite
-      layers.push(
-        <div key="oil-label" className="absolute bottom-32 right-3 bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg" style={{ zIndex: Z_LEVELS.labels }}>
-          🛢️ ACEITE
-        </div>
-      );
+      if (oilLevel > 0.45) {
+        layers.push(
+          <div
+            key="oil-label"
+            className="absolute right-3 bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg transition-all duration-500"
+            style={{
+              bottom: `${Math.max(28, oilBottomOffset + oilHeight + 6)}px`,
+              zIndex: Z_LEVELS.labels,
+              opacity: 0.5 + oilLevel * 0.5,
+            }}
+          >
+            🛢️ ACEITE
+          </div>
+        );
+      }
 
       if (droppingIngredient === 'oil') {
+        layers.push(
+          <div
+            key="oil-ribbon"
+            className="absolute inset-x-0 top-0 h-full pointer-events-none"
+            style={{ zIndex: Z_LEVELS.dropping }}
+          >
+            <div className="absolute left-[45%] top-[-6%] w-8 h-[120%] rotate-3 overflow-hidden">
+              <div className="absolute inset-x-1 top-[-10%] h-[140%] rounded-full bg-gradient-to-b from-amber-100/70 via-amber-300/60 to-transparent blur-[1px] animate-[oilCascade_1.25s_ease-in_forwards]" />
+            </div>
+            <div className="absolute right-[20%] top-[-2%] h-[115%] w-6 -rotate-6 overflow-hidden">
+              <div className="absolute inset-x-1 top-[-15%] h-[135%] rounded-full bg-gradient-to-b from-yellow-200/60 via-amber-400/50 to-transparent blur-[1px] animate-[oilCascade_1.25s_ease-out_forwards]" />
+            </div>
+          </div>
+        );
         layers.push(
           <div
             key="oil-sheen"
             className="absolute left-1/2" 
             style={{
-              bottom: `${WATER_HEIGHT_PX + OIL_HEIGHT_PX / 2}px`,
+              bottom: `${oilBottomOffset + Math.max(10, oilHeight / 2)}px`,
               transform: 'translateX(-50%)',
               zIndex: Z_LEVELS.dropping,
             }}
@@ -283,8 +519,29 @@ export default function LavaLampLab() {
                 className="absolute w-1.5 h-1.5 bg-yellow-200 rounded-full animate-[bubbleRise_1.2s_ease-out]"
                 style={{
                   left: `${30 + i * 10}%`,
-                  bottom: `${WATER_HEIGHT_PX + 4}px`,
+                  bottom: `${oilBottomOffset + 4}px`,
                   animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+          </div>
+        );
+      }
+
+      if (recentIngredient === 'oil') {
+        layers.push(
+          <div
+            key="oil-ripple"
+            className="absolute left-0 right-0"
+            style={{ bottom: `${oilBottomOffset + Math.max(8, oilHeight / 2)}px`, zIndex: Z_LEVELS.oilBubbles }}
+          >
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={`oil-ring-${i}`}
+                className="absolute left-1/2 h-6 w-[70%] -translate-x-1/2 rounded-full border border-amber-200/50 animate-[oilRipple_1.6s_ease-out_forwards]"
+                style={{
+                  animationDelay: `${i * 0.18}s`,
+                  opacity: 0.6 - i * 0.15,
                 }}
               />
             ))}
@@ -303,9 +560,12 @@ export default function LavaLampLab() {
             className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900 via-red-700 to-pink-500 animate-[colorDiffusion_3s_ease-out]"
             style={{
               clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
-              opacity: 0.7,
+              opacity: Math.min(0.85, dyeLevel * 0.85),
               mixBlendMode: 'multiply',
               height: `${WATER_HEIGHT_PX}px`,
+              transformOrigin: '50% 100%',
+              transform: `scaleY(${Math.max(0.04, waterLevel)})`,
+              transition: 'transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease-out',
               zIndex: Z_LEVELS.waterTint,
             }}
           />
@@ -319,11 +579,14 @@ export default function LavaLampLab() {
             key="tinted-oil"
             className="absolute left-0 right-0 bg-gradient-to-t from-orange-800 to-red-600 animate-[colorDiffusion_3s_ease-out]"
             style={{
-              bottom: OIL_BOTTOM_OFFSET,
+              bottom: `${oilBottomOffset}px`,
               clipPath: 'polygon(14% 100%, 86% 100%, 83% 0%, 17% 0%)',
-              opacity: 0.6,
+              opacity: Math.min(0.85, dyeLevel * 0.85),
               mixBlendMode: 'multiply',
               height: `${OIL_HEIGHT_PX}px`,
+              transformOrigin: '50% 100%',
+              transform: `scaleY(${Math.max(0.04, oilLevel)})`,
+              transition: 'transform 1s cubic-bezier(0.16,1,0.3,1), opacity 0.7s ease-out',
               zIndex: Z_LEVELS.oilTint,
             }}
           />
@@ -375,6 +638,17 @@ export default function LavaLampLab() {
       // Efecto cuando se agrega colorante
       if (droppingIngredient === 'dye') {
         layers.push(
+          <div
+            key="dye-stream"
+            className="absolute inset-0 pointer-events-none"
+            style={{ zIndex: Z_LEVELS.dyeEffects }}
+          >
+            <div className="absolute left-1/2 top-[-12%] w-6 h-[130%] -translate-x-1/2 overflow-hidden">
+              <div className="absolute inset-x-0 top-[-10%] h-[140%] rounded-full bg-gradient-to-b from-rose-200/80 via-red-500/70 to-transparent blur-sm animate-[dyeComet_1.1s_cubic-bezier(0.45,0.01,0.2,1)_forwards]" />
+            </div>
+          </div>
+        );
+        layers.push(
           <div key="dye-impact" className="absolute bottom-20 left-1/2 transform -translate-x-1/2" style={{ zIndex: Z_LEVELS.dyeEffects }}>
             {[...Array(15)].map((_, i) => (
               <div key={i} 
@@ -395,16 +669,59 @@ export default function LavaLampLab() {
           🎨 COLOR
         </div>
       );
+
+      if (recentIngredient === 'dye') {
+        layers.push(
+          <div
+            key="dye-spiral"
+            className="absolute inset-0 pointer-events-none"
+            style={{ zIndex: Z_LEVELS.dyeEffects }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={`dye-ribbon-${i}`}
+                className="absolute left-1/2 top-[20%] -translate-x-1/2"
+                style={{ transform: `rotate(${12 - i * 12}deg)` }}
+              >
+                <div
+                  className="h-[60%] w-1 origin-top bg-gradient-to-b from-red-300/0 via-red-400/80 to-purple-600/70 mix-blend-screen animate-[dyeSpiral_2.4s_ease-in-out_infinite]"
+                  style={{
+                    opacity: 0.4 + i * 0.15,
+                    animationDelay: `${i * 0.3}s`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        );
+      }
     }
     
     // Pastilla - efectos de burbujas y lava ESPECTACULARES
     if (jarContents.includes('tablet')) {
+      layers.push(
+        <div
+          key="lava-shader"
+          className="absolute inset-0"
+          style={{
+            clipPath: 'polygon(12% 100%, 88% 100%, 78% 0%, 22% 0%)',
+            zIndex: Z_LEVELS.lavaOverlay - 2,
+            overflow: 'hidden',
+          }}
+        >
+          <LavaShaderPanel
+            active={tabletLevel > 0.05}
+            intensity={1 + tabletLevel * 0.7 + (recentIngredient === 'tablet' ? 0.4 : 0)}
+            className="absolute inset-0"
+          />
+        </div>
+      );
       // EFECTO DE LAVA PRINCIPAL - Base burbujeante MUY VISIBLE
       layers.push(
         <div key="lava-base" className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-red-800 via-orange-600 to-yellow-500 animate-[colorDiffusion_2s_ease-in-out_infinite]" 
              style={{
                clipPath: 'polygon(12% 100%, 88% 100%, 78% 0%, 22% 0%)',
-               opacity: 0.55,
+               opacity: 0.2 + tabletLevel * 0.45,
                mixBlendMode: 'screen',
                zIndex: Z_LEVELS.lavaOverlay
              }}/>
@@ -419,7 +736,43 @@ export default function LavaLampLab() {
       
       // Burbujas de lava GRANDES que suben
       layers.push(
-        <div key="lava-bubbles-big" className="absolute inset-0 overflow-hidden" style={{ zIndex: Z_LEVELS.lavaOverlay }}>
+        <div
+          key="lava-bubbles-big"
+          className="absolute inset-0 overflow-hidden"
+          style={{ zIndex: Z_LEVELS.lavaOverlay, opacity: 0.25 + tabletLevel * 0.75, transition: 'opacity 0.9s ease-out' }}
+        >
+          {LAVA_BLOB_CLUSTERS.map((blob, index) => (
+            <div
+              key={`lava-cluster-${index}`}
+              className="absolute"
+              style={{
+                left: `${blob.baseLeft}%`,
+                bottom: `${blob.baseBottom}px`,
+                width: `${blob.width}px`,
+                height: `${blob.height}px`,
+                animation: `lavaBlobRise ${blob.duration}s ease-in-out ${blob.delay}s infinite`,
+              }}
+            >
+              <div
+                className="absolute inset-0 rounded-[45%] bg-gradient-to-t from-[#b91c1c] via-[#f97316] to-[#fde047] shadow-[0_0_18px_rgba(251,191,36,0.35)]"
+                style={{
+                  clipPath: 'path("M12 2 C18 -2 34 -2 40 2 C48 12 50 32 40 46 C32 58 20 62 12 48 C2 34 2 18 12 2Z")',
+                  opacity: 0.55,
+                  mixBlendMode: 'screen',
+                }}
+              />
+              <div
+                className="absolute inset-0 rounded-[50%]"
+                style={{
+                  background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0) 55%)',
+                  mixBlendMode: 'screen',
+                  animation: 'lavaBlobPulse 2.6s ease-in-out alternate infinite',
+                  animationDelay: `${blob.delay}s`,
+                  opacity: 0.4,
+                }}
+              />
+            </div>
+          ))}
           {[...Array(8)].map((_, i) => (
             <div
               key={`lava-big-${i}`}
@@ -440,7 +793,38 @@ export default function LavaLampLab() {
       
       // Burbujas medianas más rápidas
       layers.push(
-        <div key="lava-bubbles-medium" className="absolute inset-0 overflow-hidden" style={{ zIndex: Z_LEVELS.lavaOverlay }}>
+        <div
+          key="lava-bubbles-medium"
+          className="absolute inset-0 overflow-hidden"
+          style={{ zIndex: Z_LEVELS.lavaOverlay, opacity: 0.2 + tabletLevel * 0.6, transition: 'opacity 0.9s ease-out' }}
+        >
+          {LAVA_STREAMS.map((stream, index) => (
+            <div
+              key={`lava-stream-${index}`}
+              className="absolute bottom-0"
+              style={{
+                left: `${stream.left}%`,
+                width: '18px',
+                height: '100%',
+                animation: `lavaStreamFlow 4.6s ease-in-out ${stream.delay}s infinite`,
+                opacity: 0.4,
+              }}
+            >
+              <div
+                className="absolute inset-0 rounded-full bg-gradient-to-b from-[#fde047]/10 via-[#f97316]/30 to-[#b91c1c]/50"
+                style={{ filter: `blur(${stream.blur}px)`, mixBlendMode: 'screen' }}
+              />
+              <div
+                className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-[#fb923c]/30 to-[#b91c1c]/60"
+                style={{
+                  mixBlendMode: 'screen',
+                  animation: 'lavaStreamHighlight 2.4s ease-in-out alternate infinite',
+                  animationDelay: `${stream.delay / 1.5}s`,
+                  opacity: 0.5,
+                }}
+              />
+            </div>
+          ))}
           {[...Array(12)].map((_, i) => (
             <div
               key={`lava-med-${i}`}
@@ -460,7 +844,11 @@ export default function LavaLampLab() {
       
       // Pequeñas burbujas efervescentes MUY rápidas
       layers.push(
-        <div key="effervescent-bubbles" className="absolute inset-0 overflow-hidden" style={{ zIndex: Z_LEVELS.lavaOverlay }}>
+        <div
+          key="effervescent-bubbles"
+          className="absolute inset-0 overflow-hidden"
+          style={{ zIndex: Z_LEVELS.lavaOverlay, opacity: 0.3 + tabletLevel * 0.6, transition: 'opacity 0.9s ease-out' }}
+        >
           {[...Array(20)].map((_, i) => (
             <div
               key={`fizz-${i}`}
@@ -483,10 +871,35 @@ export default function LavaLampLab() {
         <div key="boiling-effect" className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-red-700 to-transparent animate-pulse" 
              style={{
                clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
-               opacity: 0.7,
+               opacity: 0.25 + tabletLevel * 0.55,
                animationDuration: '1s',
                zIndex: Z_LEVELS.lavaOverlay
              }}/>
+      );
+
+      layers.push(
+        <div
+          key="lava-surface"
+          className="absolute inset-x-0"
+          style={{ bottom: `${lavaBaseOffset + 4}px`, zIndex: Z_LEVELS.lavaOverlay }}
+        >
+          {LAVA_SURFACE_RIPPLES.map((ripple, idx) => (
+            <div
+              key={`surface-ripple-${idx}`}
+              className="absolute left-1/2 h-4 -translate-x-1/2 rounded-full border border-amber-100/40 animate-[lavaSurface_2.8s_ease-in-out_infinite]"
+              style={{
+                width: ripple.width,
+                animationDelay: `${ripple.delay}s`,
+                opacity: (0.3 + tabletLevel * 0.6) * (0.5 - idx * 0.12),
+                transition: 'opacity 0.8s ease-out',
+              }}
+            />
+          ))}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 h-2 w-3/4 rounded-full bg-gradient-to-r from-[#fde047]/30 via-[#f97316]/20 to-[#fb923c]/30 blur-sm"
+            style={{ animation: 'lavaSurfaceGlow 3.2s ease-in-out infinite', opacity: 0.2 + tabletLevel * 0.6 }}
+          />
+        </div>
       );
       
       // Ondas de calor desde el fondo
@@ -500,7 +913,7 @@ export default function LavaLampLab() {
                    height: `${10 + i * 8}px`,
                    left: `${-5 - i * 4}px`,
                    animationDelay: `${i * 0.6}s`,
-                   opacity: 0.4
+                   opacity: 0.15 + tabletLevel * 0.4
                  }}/>
           ))}
         </div>
@@ -508,12 +921,28 @@ export default function LavaLampLab() {
       
       // Indicador de temperatura
       layers.push(
-        <div key="temp-indicator" className="absolute top-12 right-2 bg-red-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce" style={{ zIndex: Z_LEVELS.indicators }}>
+        <div
+          key="temp-indicator"
+          className="absolute top-12 right-2 bg-red-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce"
+          style={{ zIndex: Z_LEVELS.indicators, opacity: 0.4 + tabletLevel * 0.6, transition: 'opacity 0.6s ease-out' }}
+        >
           🌡️ HOT!
         </div>
       );
 
       if (droppingIngredient === 'tablet') {
+        layers.push(
+          <div
+            key="tablet-trail"
+            className="absolute inset-0 pointer-events-none"
+            style={{ zIndex: Z_LEVELS.dropping }}
+          >
+            <div className="absolute left-1/2 top-[-12%] h-[130%] w-10 -translate-x-1/2">
+              <div className="absolute inset-x-2 top-[-8%] h-[135%] rounded-full bg-gradient-to-b from-white via-amber-200/80 to-transparent blur-sm animate-[tabletStreak_1.15s_cubic-bezier(0.19,1,0.22,1)_forwards]" />
+            </div>
+            <div className="absolute left-1/2 top-[10%] h-8 w-8 -translate-x-1/2 rounded-full border border-orange-200/80 blur-sm animate-[tabletHalo_1.15s_ease-out_forwards]" />
+          </div>
+        );
         layers.push(
           <div key="tablet-impact" className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3" style={{ zIndex: Z_LEVELS.dropping }}>
             {[...Array(6)].map((_, i) => (
@@ -522,6 +951,30 @@ export default function LavaLampLab() {
                 className="w-2 h-2 bg-white/80 rounded-full animate-[fizz_1.2s_ease-out]"
                 style={{ animationDelay: `${i * 0.08}s` }}
               />
+            ))}
+          </div>
+        );
+      }
+
+      if (recentIngredient === 'tablet') {
+        layers.push(
+          <div
+            key="tablet-core"
+            className="absolute inset-0 pointer-events-none"
+            style={{ zIndex: Z_LEVELS.lavaOverlay }}
+          >
+            <div className="absolute left-1/2 bottom-4 h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-t from-red-700 via-orange-500 to-yellow-300 opacity-80 blur-lg animate-[lavaPulse_2.2s_ease-in-out_infinite]" />
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={`lava-ray-${i}`}
+                className="absolute left-1/2 bottom-10 -translate-x-1/2"
+                style={{ transform: `rotate(${i * 18 - 36}deg)` }}
+              >
+                <div
+                  className="h-28 w-1 origin-bottom bg-gradient-to-b from-yellow-200/0 via-yellow-200/70 to-red-400/40 animate-[lavaRay_2.1s_ease-in-out_infinite]"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
+              </div>
             ))}
           </div>
         );
@@ -622,6 +1075,309 @@ export default function LavaLampLab() {
             bottom: 200px;
             opacity: 0;
             transform: scale(0.6);
+          }
+        }
+
+        @keyframes lavaBlobRise {
+          0% {
+            transform: translate3d(0, 0, 0) scale(0.9);
+            opacity: 0.65;
+          }
+          40% {
+            transform: translate3d(0, 22px, 0) scale(1.05);
+            opacity: 0.88;
+          }
+          55% {
+            transform: translate3d(0, 38px, 0) scale(1.1);
+            opacity: 0.95;
+          }
+          80% {
+            transform: translate3d(0, 72px, 0) scale(0.95);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translate3d(0, 92px, 0) scale(0.85);
+            opacity: 0.4;
+          }
+        }
+
+        @keyframes lavaBlobPulse {
+          0% {
+            transform: scale(0.92);
+            opacity: 0.6;
+          }
+          100% {
+            transform: scale(1.08);
+            opacity: 0.85;
+          }
+        }
+
+        @keyframes lavaStreamFlow {
+          0% {
+            transform: translateY(20%) scaleY(0.8);
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(-10%) scaleY(1.05);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translateY(-60%) scaleY(0.6);
+            opacity: 0.2;
+          }
+        }
+
+        @keyframes lavaStreamHighlight {
+          0% {
+            opacity: 0.2;
+            transform: scaleY(0.7);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scaleY(1.1);
+          }
+          100% {
+            opacity: 0.2;
+            transform: scaleY(0.8);
+          }
+        }
+        
+        @keyframes waterPour {
+          0% {
+            transform: translateY(-20%) scaleY(0.6);
+            opacity: 0;
+          }
+          40% {
+            transform: translateY(0%) scaleY(1.05);
+            opacity: 0.85;
+          }
+          100% {
+            transform: translateY(90%) scaleY(0.8);
+            opacity: 0;
+          }
+        }
+
+        @keyframes waterImpact {
+          0% {
+            transform: translate(-50%, 40%) scale(0.4);
+            opacity: 0;
+          }
+          30% {
+            transform: translate(-50%, 0%) scale(1.1);
+            opacity: 0.7;
+          }
+          60% {
+            transform: translate(-50%, -30%) scale(0.9);
+            opacity: 0.4;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(0.6);
+            opacity: 0;
+          }
+        }
+
+        @keyframes wavePulse {
+          0% {
+            transform: translateX(-50%) scale(0.65, 0.8);
+            opacity: 0.8;
+          }
+          60% {
+            transform: translateX(-50%) scale(1.05, 1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-50%) scale(1.2, 1.1);
+            opacity: 0;
+          }
+        }
+
+        @keyframes oilCascade {
+          0% {
+            transform: translateY(-15%) scaleX(0.9);
+            opacity: 0;
+          }
+          45% {
+            transform: translateY(20%) scaleX(1.02);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translateY(90%) scaleX(0.95);
+            opacity: 0;
+          }
+        }
+
+        @keyframes oilRipple {
+          0% {
+            transform: translateX(-50%) scale(0.7, 0.6);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translateX(-50%) scale(1.05, 1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-50%) scale(1.4, 1.1);
+            opacity: 0;
+          }
+        }
+
+        @keyframes dyeComet {
+          0% {
+            transform: translateY(-15%) scaleY(0.2);
+            opacity: 0;
+          }
+          40% {
+            transform: translateY(20%) scaleY(1.1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(110%) scaleY(0.6);
+            opacity: 0;
+          }
+        }
+
+        @keyframes dyeSpiral {
+          0% {
+            transform: rotate(0deg) scaleY(0.85);
+            opacity: 0.4;
+          }
+          50% {
+            transform: rotate(200deg) scaleY(1);
+            opacity: 0.9;
+          }
+          100% {
+            transform: rotate(360deg) scaleY(0.8);
+            opacity: 0.4;
+          }
+        }
+
+        @keyframes tabletStreak {
+          0% {
+            transform: translateY(-10%) scaleY(0.3);
+            opacity: 0;
+          }
+          40% {
+            transform: translateY(10%) scaleY(1.1);
+            opacity: 0.9;
+          }
+          100% {
+            transform: translateY(110%) scaleY(0.5);
+            opacity: 0;
+          }
+        }
+
+        @keyframes tabletHalo {
+          0% {
+            transform: translate(-50%, -40%) scale(0.4);
+            opacity: 0;
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translate(-50%, -60%) scale(0.8);
+            opacity: 0;
+          }
+        }
+
+        @keyframes lavaPulse {
+          0% {
+            transform: translate(-50%, 0) scale(0.8);
+            opacity: 0.6;
+          }
+          50% {
+            transform: translate(-50%, 0) scale(1.05);
+            opacity: 0.95;
+          }
+          100% {
+            transform: translate(-50%, 0) scale(0.85);
+            opacity: 0.6;
+          }
+        }
+
+        @keyframes lavaRay {
+          0% {
+            transform: scaleY(0.5);
+            opacity: 0.25;
+          }
+          50% {
+            transform: scaleY(1.05);
+            opacity: 0.9;
+          }
+          100% {
+            transform: scaleY(0.55);
+            opacity: 0.3;
+          }
+        }
+
+        @keyframes lavaAura {
+          0% {
+            transform: scale(0.92) rotate(0deg);
+            opacity: 0.6;
+          }
+          50% {
+            transform: scale(1.05) rotate(5deg);
+            opacity: 0.9;
+          }
+          100% {
+            transform: scale(0.92) rotate(0deg);
+            opacity: 0.6;
+          }
+        }
+
+        @keyframes lavaOrbit {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes lavaSpark {
+          0% {
+            transform: translate(-50%, -120%) scale(0.3);
+            opacity: 0;
+          }
+          40% {
+            transform: translate(-50%, -160%) scale(1);
+            opacity: 0.9;
+          }
+          80% {
+            transform: translate(-50%, -190%) scale(0.6);
+            opacity: 0.4;
+          }
+          100% {
+            transform: translate(-50%, -120%) scale(0.2);
+            opacity: 0;
+          }
+        }
+
+        @keyframes lavaSurface {
+          0% {
+            transform: translate(-50%, 0) scaleX(0.8);
+            opacity: 0.4;
+          }
+          50% {
+            transform: translate(-50%, -4px) scaleX(1.05);
+            opacity: 0.75;
+          }
+          100% {
+            transform: translate(-50%, -8px) scaleX(1.2);
+            opacity: 0;
+          }
+        }
+
+        @keyframes lavaSurfaceGlow {
+          0% {
+            opacity: 0.4;
+          }
+          50% {
+            opacity: 0.9;
+          }
+          100% {
+            opacity: 0.4;
           }
         }
         
@@ -893,20 +1649,39 @@ export default function LavaLampLab() {
                   <div className="absolute top-12 right-3 w-1 h-10 bg-gradient-to-b from-white/60 to-transparent rounded-full"></div>
                   
                   {/* Efectos de animación exitosa */}
-                  {showAnimation && (
-                    <>
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-3xl animate-bounce">
-                        ✨
-                      </div>
+                {showAnimation && (
+                  <>
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-3xl animate-bounce">
+                      ✨
+                    </div>
                       <div className="absolute -top-4 left-1/4 text-2xl animate-pulse" style={{animationDelay: '0.5s'}}>
                         🧪
                       </div>
                       <div className="absolute -top-4 right-1/4 text-2xl animate-pulse" style={{animationDelay: '1s'}}>
                         🌟
                       </div>
-                    </>
-                  )}
+                  </>
+                )}
+              </div>
+
+              {lavaBurst && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="absolute h-[118%] w-[118%] rounded-[46%] bg-gradient-to-br from-red-500/10 via-orange-400/5 to-yellow-200/10 blur-3xl animate-[lavaAura_4s_ease-in-out_infinite]" />
+                  <div className="absolute h-[125%] w-[125%] rounded-full border-2 border-dashed border-amber-200/40 animate-[lavaOrbit_6s_linear_infinite]" />
+                  {[...Array(12)].map((_, i) => (
+                    <div
+                      key={`burst-spark-${i}`}
+                      className="absolute left-1/2 top-1/2"
+                      style={{ transform: `rotate(${i * 30}deg)` }}
+                    >
+                      <div
+                        className="h-2 w-2 rounded-full bg-gradient-to-br from-yellow-200 to-amber-400 animate-[lavaSpark_2.2s_ease-in-out_infinite]"
+                        style={{ animationDelay: `${i * 0.12}s` }}
+                      />
+                    </div>
+                  ))}
                 </div>
+              )}
                 
                 {/* Base del beaker */}
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-36 h-4 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 rounded-full shadow-lg"></div>
@@ -959,7 +1734,25 @@ export default function LavaLampLab() {
         {/* Popup de éxito */}
         {isComplete && (
           <div className="fixed inset-0 bg-purple-200/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-[0_25px_50px_rgba(124,58,237,0.25)] border-4 border-dashed border-pink-300 animate-[bounce_1.4s_infinite]">
+            <div className="relative bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-[0_25px_50px_rgba(124,58,237,0.25)] border-4 border-dashed border-pink-300 animate-[bounce_1.4s_infinite] overflow-hidden">
+              <div className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-10 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-gradient-to-b from-orange-200/60 via-rose-200/30 to-transparent blur-2xl animate-[lavaAura_5s_ease-in-out_infinite]" />
+                <div className="absolute left-1/2 bottom-[-30%] h-52 w-52 -translate-x-1/2 rounded-full bg-gradient-to-t from-red-500/70 via-orange-400/60 to-yellow-200/40 blur-3xl animate-[lavaPulse_3s_ease-in-out_infinite]" />
+                <div className="absolute inset-0">
+                  {[...Array(10)].map((_, i) => (
+                    <div
+                      key={`popup-spark-${i}`}
+                      className="absolute left-1/2 top-1/2"
+                      style={{ transform: `rotate(${i * 36}deg)` }}
+                    >
+                      <div
+                        className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-yellow-100 to-amber-300 animate-[lavaSpark_2.4s_ease-in-out_infinite]"
+                        style={{ animationDelay: `${i * 0.18}s` }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="text-6xl mb-4">🎉</div>
               <h2 className="text-3xl font-black text-purple-600 mb-4 drop-shadow-sm">
                 ¡Experimento exitoso!

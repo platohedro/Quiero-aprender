@@ -439,6 +439,30 @@ export default function AtrilScene({
         >
           <object3D position={[0, focusTarget[1], 0]} />
         </spotLight>
+        {/* Luces puntuales que acentúan al personaje activo */}
+        <group>
+          <pointLight
+            position={[focusTarget[0] + 0.4, focusTarget[1] + 0.9, focusTarget[2] + 0.3]}
+            color="#ffdbaa"
+            intensity={3.2}
+            distance={6.5}
+            decay={1.1}
+          />
+          <pointLight
+            position={[focusTarget[0] - 0.6, focusTarget[1] + 0.6, focusTarget[2] - 0.2]}
+            color="#d6e8ff"
+            intensity={2.4}
+            distance={5.5}
+            decay={1.15}
+          />
+          <pointLight
+            position={[focusTarget[0], focusTarget[1] + 1.6, focusTarget[2] - 0.8]}
+            color="#fff6e5"
+            intensity={1.8}
+            distance={7}
+            decay={1.05}
+          />
+        </group>
 
         <Suspense fallback={null}>
           <LoadingBackdrop />

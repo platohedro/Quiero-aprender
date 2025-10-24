@@ -1,5 +1,22 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+
+const ACUARELAS_GALERIA = [
+  "/acuarelas/IMG_20251010_094306.jpg",
+  "/acuarelas/IMG_20251010_094440.jpg",
+  "/acuarelas/IMG_20251010_094620.jpg",
+  "/acuarelas/IMG_20251010_094743.jpg",
+  "/acuarelas/IMG_20251010_094953.jpg",
+  "/acuarelas/IMG_20251010_095143.jpg",
+  "/acuarelas/IMG_20251010_095312.jpg",
+  "/acuarelas/IMG_20251010_095436.jpg",
+  "/acuarelas/IMG_20251010_095537.jpg",
+  "/acuarelas/IMG_20251010_100303.jpg",
+  "/acuarelas/IMG_20251010_100507.jpg",
+  "/acuarelas/IMG_20251010_101055.jpg",
+  "/acuarelas/IMG_20251010_101954.jpg",
+] as const;
 
 export default function Acuarela() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -487,10 +504,45 @@ export default function Acuarela() {
                 onPointerLeave={end}
                 onPointerCancel={end}
               />
-            </div>
-          </div>
         </div>
       </div>
+      <section className="mt-10 w-full max-w-5xl rounded-3xl border border-white/30 bg-white/10 p-6 backdrop-blur-lg shadow-2xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-white drop-shadow-lg">Galería de inspiración en óleo</h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-100/80 leading-relaxed">
+              Mira cómo la luz acaricia el pigmento y deja que estas obras guíen tus contrastes, texturas y mezclas.
+            </p>
+          </div>
+          <span className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-sky-100/90">
+            Sesión 3 · Pintar
+          </span>
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {ACUARELAS_GALERIA.map((src, index) => (
+            <figure
+              key={src}
+              className="group overflow-hidden rounded-2xl border border-white/40 bg-white/20 shadow-md transition hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="relative aspect-[3/4] w-full overflow-hidden">
+                <Image
+                  src={src}
+                  alt={`Referencia de óleo ${index + 1}`}
+                  fill
+                  className="object-cover transition duration-700 group-hover:scale-105"
+                  sizes="(min-width: 1280px) 23vw, (min-width: 1024px) 28vw, (min-width: 768px) 45vw, 90vw"
+                  priority={index < 2}
+                />
+              </div>
+              <figcaption className="border-t border-white/40 bg-white/30 px-4 py-3 text-sm font-medium text-slate-800">
+                {`Referencia de óleo ${index + 1}`}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
     </div>
+  </div>
+</div>
   );
 }

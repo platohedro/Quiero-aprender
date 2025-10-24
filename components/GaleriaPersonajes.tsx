@@ -35,7 +35,7 @@ export default function GaleriaPersonajes() {
         id: "personaje1",
         nombre: "Primer Personaje",
         descripcion: "Modelo inicial de prueba para la vitrina 3D.",
-        model: "/3d/personajes/personaje1.fbx",
+        model: "/3d/personajes/personaje_n1.fbx",
         scale: 9,
         fitHeight: 2,
         rotation: [0, Math.PI * 0.05, 0] as [number, number, number],
@@ -163,7 +163,7 @@ export default function GaleriaPersonajes() {
         <AtrilScene {...sceneConfig} />
       </div>
 
-  
+
       {/* <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {MOCK_PERSONAJES.map((p) => (
           <div key={p.id} className="rounded-2xl border shadow-md overflow-hidden bg-white">
