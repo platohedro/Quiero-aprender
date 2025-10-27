@@ -3,14 +3,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Canvas, extend, ReactThreeFiber, useFrame } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
-import {
-  Color,
-  DataTexture,
-  LinearFilter,
-  RepeatWrapping,
-  RGBAFormat,
-  Texture,
-} from "three";
+import { Color, DataTexture, LinearFilter, RepeatWrapping, RGBAFormat, ShaderMaterial, Texture } from "three";
 
 const vertexShader = `
   varying vec2 vUv;
@@ -79,10 +72,19 @@ const LavaMaterial = shaderMaterial(
 
 extend({ LavaMaterial });
 
+type LavaMaterialImpl = ShaderMaterial & {
+  time: number;
+  fogDensity: number;
+  fogColor: Color;
+  texture1: Texture | null;
+  texture2: Texture | null;
+  intensity: number;
+};
+
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      lavaMaterial: ReactThreeFiber.Object3DNode<typeof LavaMaterial, typeof LavaMaterial>;
+      lavaMaterial: ReactThreeFiber.Object3DNode<LavaMaterialImpl, typeof LavaMaterial>;
     }
   }
 }
