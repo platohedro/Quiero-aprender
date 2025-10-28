@@ -544,11 +544,13 @@ export default function AtrilScene({
   const focusTarget = frame.target;
 
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-3xl border border-brand-lavender/30 bg-[rgba(29,27,41,0.85)]">
+    <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-3xl border border-brand-lavender/30 bg-[rgba(29,27,41,0.85)]">
       <Canvas
         shadows
         camera={{ position: [0, 2.8, 6.2], fov: 28 }}
         dpr={[1, 1.8]}
+        className="h-full w-full"
+        style={{ height: "100%", width: "100%" }}
       >
         <color attach="background" args={["#1c1a2a"]} />
         <ambientLight intensity={0.55} color="#f8f9ff" />

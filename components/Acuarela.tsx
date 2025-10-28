@@ -14,7 +14,6 @@ const ACUARELAS_GALERIA = [
   "/acuarelas/IMG_20251010_095436.jpg",
   "/acuarelas/IMG_20251010_095537.jpg",
   "/acuarelas/IMG_20251010_100303.jpg",
-  "/acuarelas/IMG_20251010_100507.jpg",
   "/acuarelas/IMG_20251010_101055.jpg",
   "/acuarelas/IMG_20251010_101954.jpg",
 ] as const;

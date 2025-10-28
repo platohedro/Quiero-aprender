@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-sky: #80c1dd;
-  --color-rose: #f2aadc;
-  --color-lime: #dcf2aa;
-  --color-lavender: #c0aaf2;
-  --color-ink: #1d1b29;
-  --color-paper: #fbfafc;
-}
-
 html,
 body {
   height: 100%;
@@ -18,10 +9,9 @@ body {
 
 body {
   @apply font-sans;
-  background:
-    radial-gradient(circle at 50% 18%, var(--color-sky) 0%, var(--color-paper) 46%),
-    linear-gradient(150deg, var(--color-lavender) 0%, var(--color-rose) 52%, var(--color-lime) 100%);
-  color: var(--color-ink);
+  background-color: #f4f4f6;
+  color: #111827;
+  letter-spacing: 0;
 }
 
 h1,
@@ -30,7 +20,47 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-oswald), sans-serif;
-  letter-spacing: 0.02em;
-  color: var(--color-ink);
+  font-family: var(--font-heading), "Space Grotesk", sans-serif;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+}
+
+body,
+p,
+span,
+li,
+button,
+input,
+textarea {
+  font-family: var(--font-body), "Inter", system-ui, sans-serif;
+}
+
+@layer components {
+  .sticker-card {
+    @apply rounded-[26px] border-2 border-black bg-white px-6 py-5 transition-transform duration-200 ease-out;
+    box-shadow: 6px 6px 0 var(--shadow-color, #80c1dd);
+  }
+
+  .sticker-card:hover {
+    transform: translate(-6px, -6px);
+    box-shadow: 10px 10px 0 var(--shadow-color, #80c1dd);
+  }
+
+  .sticker-button {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-black bg-white px-5 py-2 text-sm font-semibold transition-transform duration-150 ease-out;
+    box-shadow: 4px 4px 0 var(--shadow-color, #f2aadc);
+  }
+
+  .sticker-button:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 8px 8px 0 var(--shadow-color, #f2aadc);
+  }
+}
+:root {
+  --color-sky: #8cc8ff;
+  --color-rose: #f8b3ef;
+  --color-lime: #bff49f;
+  --color-lavender: #c5c2ff;
+  --color-ink: #0f172a;
+  --color-paper: #f4f4f6;
 }

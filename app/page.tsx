@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { CSSProperties, useEffect, useState } from "react";
 import { ThemedSection, TopNav } from "@/components/themes";
 import GaleriaPersonajes from "@/components/GaleriaPersonajes";
 import Acuarela from "@/components/Acuarela";
@@ -48,8 +48,10 @@ function Inicio() {
     },
   ];
 
+  const shadowColors = ["#80C1DD", "#F2AADC", "#DCF2AA", "#C0AAF2"];
+
   return (
-    <div className="space-y-4 text-brand-ink">
+    <div className="space-y-6 text-[#1f2937]">
       <p className="text-base leading-relaxed md:text-lg">
         “Yo quiero aprender…” es un libro interactivo creado por más de 100 niñas y niños del proyecto Matinée, una propuesta pedagógica y artística de la Corporación Platohedro. El proceso obtuvo en 2025 el estímulo del Presupuesto Participativo de la Comuna 9 – Buenos Aires, dentro de la línea de narrativas digitales y expresión cultural en Arte, Cultura, Ciencia y Tecnología.
       </p>
@@ -59,35 +61,33 @@ function Inicio() {
       <p className="text-base leading-relaxed md:text-lg">
         Con “Yo quiero aprender…” buscamos potenciar y expandir los procesos creativos y pedagógicos de las infancias que integran Matinée, un espacio que desde 2007 cultiva el encuentro, la imaginación y el aprendizaje colectivo en Platohedro. Hoy lo conforman más de cien participantes entre 5 y 13 años, quienes semana a semana exploran el arte para conocer el mundo y construir comunidad.
       </p>
-      <p className="text-sm text-brand-ink/70 md:text-base">
+      <p className="text-sm text-[#475569] md:text-base">
         Desplázate con calma, respira y deja que cada sesión vaya contando la historia. Encontrarás instrucciones
         suaves en las tarjetas a la izquierda y el laboratorio vivo a la derecha.
       </p>
-      <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {sesiones.map((sesion) => (
+      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {sesiones.map((sesion, index) => (
           <a
             key={sesion.id}
             href={`#${sesion.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-brand-lavender/30 bg-brand-paper/90 shadow-[0_16px_32px_rgba(29,27,41,0.06)] transition-all duration-200 hover:-translate-y-1 hover:border-brand-lavender/50 hover:shadow-[0_24px_48px_rgba(29,27,41,0.08)]"
+            className="group sticker-card block"
             aria-label={`Ir a ${sesion.title}`}
+            style={{ "--shadow-color": shadowColors[index % shadowColors.length] } as CSSProperties}
           >
-            <div
-              className="absolute inset-x-0 -top-16 h-32 bg-[radial-gradient(circle_at_top,var(--color-sky)_0%,rgba(255,255,255,0.1)_70%)] opacity-80 blur-2xl transition-opacity duration-200 group-hover:opacity-100"
-              aria-hidden
-            />
-            <div className="relative flex items-start gap-4 p-5">
+            <div className="relative flex items-start gap-4">
               <span
-                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky/40 text-2xl text-brand-ink shadow-inner"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-black text-2xl text-[#0f172a]"
+                style={{ backgroundColor: shadowColors[index % shadowColors.length] }}
                 aria-hidden
               >
                 {sesion.icon}
               </span>
               <div className="space-y-2">
-                <h3 className="font-display text-lg font-semibold text-brand-ink">{sesion.title}</h3>
-                <p className="text-sm leading-relaxed text-brand-ink/70">{sesion.description}</p>
-                <span className="inline-flex items-center gap-2 text-sm font-display font-semibold uppercase tracking-wide text-brand-ink/60">
+                <h3 className="font-display text-lg font-semibold text-[#0f172a]">{sesion.title}</h3>
+                <p className="text-sm leading-relaxed text-[#374151]">{sesion.description}</p>
+                <span className="inline-flex items-center gap-2 text-xs font-display font-semibold uppercase tracking-[0.3em] text-[#0f172a]">
                   Explorar
-                  <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+                  <span className="transition-transform duration-200 group-hover:translate-x-1 group-hover:scale-110">→</span>
                 </span>
               </div>
             </div>
@@ -100,11 +100,11 @@ function Inicio() {
 
 function Sobre() {
   return (
-    <div className="space-y-4 text-brand-ink/80">
+    <div className="space-y-4 text-[#1f2937]">
       <p>
         Yo Quiero Aprender nació dentro de <strong>Platohedro</strong> como un laboratorio que combina pedagogías sensibles, fabricación digital y expresión artística. Esta versión es un prototipo que seguirá creciendo con lo que descubramos junto a lxs niñxs.
       </p>
-      <p className="text-sm text-brand-ink/60">
+      <p className="text-sm text-[#475569]">
         Próximos pasos: integrar cámaras para subir imágenes reales, conservar combinaciones favoritas y abrir más guías para acompañantes y facilitadorxs.
       </p>
     </div>
@@ -113,16 +113,16 @@ function Sobre() {
 
 function Creditos() {
   return (
-    <div className="space-y-3 text-brand-paper">
+    <div className="space-y-3 text-[#0f172a]">
       <p>
         <strong>Diseño y facilitación:</strong> Equipo Yo Quiero Aprender · Conexión Platohedro
       </p>
       <p>
         <strong>Desarrollo y prototipado:</strong> Tecnologías abiertas (Next.js, TypeScript, TailwindCSS) y mucho cariño colaborativo.
       </p>
-      <p className="text-sm text-brand-paper/70">
+      <p className="text-sm text-[#475569]">
         Escríbenos para sumar ideas, proponer mejoras o llevar Yo Quiero Aprender a tu comunidad:{" "}
-        <a className="underline decoration-brand-rose/70" href="mailto:hola@platohedro.org">
+        <a className="underline decoration-2 underline-offset-4" href="mailto:hola@platohedro.org">
           hola@platohedro.org
         </a>
       </p>
@@ -218,11 +218,7 @@ export default function YoQuieroAprenderApp() {
           title="Creación de personajes fantásticos"
           eyebrow="Capítulo 02"
           description="De las semillas pasamos a imaginar seres singulares. Esta vitrina 3D reúne personajes creados por las niñas y niños, listos para contar historias nuevas."
-          highlights={[
-            { icon: '🧚', title: 'Universos propios', text: 'Cada personaje conserva su postura, escala y energía original.' },
-            { icon: '📸', title: 'Memoria visual', text: 'La galería permite girar y acercar cada creación para reconocer detalles y materiales.' },
-            { icon: '🧵', title: 'Historias conectadas', text: 'Invita a tejer relatos colectivos combinando personajes y escenarios.' },
-          ]}
+        
         >
           <GaleriaPersonajes />
         </ThemedSection>
@@ -294,7 +290,33 @@ export default function YoQuieroAprenderApp() {
           <Creditos />
         </ThemedSection>
       </main>
-      <footer className="py-10 text-center text-sm text-gray-600">© {new Date().getFullYear()} Yo Quiero Aprender · Prototipo</footer>
+      <footer className="py-10">
+        <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 text-center text-sm text-gray-600">
+          <p>© {new Date().getFullYear()} Yo Quiero Aprender · Prototipo</p>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <a
+              href="https://www.terredeshommes.ch/es"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-[28px] border-2 border-black bg-white px-4 py-2 shadow-[6px_6px_0_#BFF49F]"
+            >
+              <img src="/logo TDH.png" alt="Terre des Hommes Schweiz" className="h-16 w-auto" />
+            </a>
+            <a
+              href="https://www.medellin.gov.co"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-[28px] border-2 border-black bg-white px-4 py-2 shadow-[6px_6px_0_#C0AAF2]"
+            >
+              <img
+                src="/logoALCALDIA.png"
+                alt="Alcaldía de Medellín"
+                className="h-16 w-auto"
+              />
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

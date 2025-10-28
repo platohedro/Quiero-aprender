@@ -4,8 +4,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-roboto-condensed)", "sans-serif"],
-        display: ["var(--font-oswald)", "sans-serif"],
+        sans: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        display: ["var(--font-heading)", "Space Grotesk", "sans-serif"],
       },
       colors: {
         brand: {
