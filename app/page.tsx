@@ -30,7 +30,7 @@ function Inicio() {
     },
     {
       id: 'slot',
-      title: '777 Vertical',
+      title: 'Animalario',
       icon: '🎰',
       description: 'Gira las columnas y deja que el azar combine escenarios e ideas.',
     },
@@ -51,8 +51,13 @@ function Inicio() {
   return (
     <div className="space-y-4 text-brand-ink">
       <p className="text-base leading-relaxed md:text-lg">
-        Yo Quiero Aprender es una <strong>ruta interactiva</strong> pensada para niñas y niños curiosos. Cada
-        parada reúne arte, música y juego para acompañar procesos creativos en casa o en talleres.
+        “Yo quiero aprender…” es un libro interactivo creado por más de 100 niñas y niños del proyecto Matinée, una propuesta pedagógica y artística de la Corporación Platohedro. El proceso obtuvo en 2025 el estímulo del Presupuesto Participativo de la Comuna 9 – Buenos Aires, dentro de la línea de narrativas digitales y expresión cultural en Arte, Cultura, Ciencia y Tecnología.
+      </p>
+      <p className="text-base leading-relaxed md:text-lg">
+        El libro reúne seis capítulos que recogen los aprendizajes y exploraciones del año: el cuidado de la semilla, la creación de personajes fantásticos, experimentos científicos con monstruos de lava, un juego sobre autocuidado, pintura en acuarela y un animalario vibrante. Cada capítulo resguarda las experiencias, hallazgos y voces creativas de las niñas y los niños que hacen parte del proyecto.
+      </p>
+      <p className="text-base leading-relaxed md:text-lg">
+        Con “Yo quiero aprender…” buscamos potenciar y expandir los procesos creativos y pedagógicos de las infancias que integran Matinée, un espacio que desde 2007 cultiva el encuentro, la imaginación y el aprendizaje colectivo en Platohedro. Hoy lo conforman más de cien participantes entre 5 y 13 años, quienes semana a semana exploran el arte para conocer el mundo y construir comunidad.
       </p>
       <p className="text-sm text-brand-ink/70 md:text-base">
         Desplázate con calma, respira y deja que cada sesión vaya contando la historia. Encontrarás instrucciones
@@ -157,10 +162,10 @@ export default function YoQuieroAprenderApp() {
       'inicio',
       'semillas',
       'galeria',
-      'acuarela',
-      'slot',
       'laboratorio',
       'mesa',
+      'acuarela',
+      'slot',
       'sobre',
       'creditos',
     ];
@@ -197,73 +202,73 @@ export default function YoQuieroAprenderApp() {
         </ThemedSection>
         <ThemedSection
           id="semillas"
-          title="Mi primera semilla sonora"
-          eyebrow="Sesión 01"
-          description="Comenzamos sembrando ritmos suaves. Las semillas despiertan sonidos vivos que pueden mezclarse para crear paisajes colectivos."
+          title="El cuidado de la semilla"
+          eyebrow="Capítulo 01"
+          description="Abrimos el camino preparando el terreno y escuchando a las semillas que despiertan. Cada interacción es un recordatorio de la paciencia, el riego y el afecto necesarios para que la vida brote."
           highlights={[
-            { icon: '🌱', title: 'Sonidos que germinan', text: 'Activa loops suaves y experimenta con capas para construir tu primera banda sonora.' },
-            { icon: '👐', title: 'Exploración libre', text: 'Arrastra, combina y escucha cómo cada semilla transforma el ambiente.' },
-            { icon: '🎧', title: 'Atención plena', text: 'Invita a escuchar con calma, reconocer texturas y compartir lo que imaginan.' },
+            { icon: '🌱', title: 'Siembra sonora', text: 'Cada semilla responde con una textura musical distinta que simboliza su crecimiento.' },
+            { icon: '🪴', title: 'Rituales de riego', text: 'Diseña rutinas breves que invitan a cuidar, observar y registrar cambios día a día.' },
+            { icon: '🎧', title: 'Escucha atenta', text: 'El ejercicio propone bajar el ritmo, identificar sonidos y compartir lo que evocan.' },
           ]}
         >
           <SemillasSonoras />
         </ThemedSection>
         <ThemedSection
           id="galeria"
-          title="Galería de personajes imaginarios"
-          eyebrow="Sesión 02"
-          description="Vamos dando cara a las historias. Aquí viven criaturas fantásticas creadas por lxs peques, listas para inspirar nuevos relatos."
-          
+          title="Creación de personajes fantásticos"
+          eyebrow="Capítulo 02"
+          description="De las semillas pasamos a imaginar seres singulares. Esta vitrina 3D reúne personajes creados por las niñas y niños, listos para contar historias nuevas."
+          highlights={[
+            { icon: '🧚', title: 'Universos propios', text: 'Cada personaje conserva su postura, escala y energía original.' },
+            { icon: '📸', title: 'Memoria visual', text: 'La galería permite girar y acercar cada creación para reconocer detalles y materiales.' },
+            { icon: '🧵', title: 'Historias conectadas', text: 'Invita a tejer relatos colectivos combinando personajes y escenarios.' },
+          ]}
         >
           <GaleriaPersonajes />
         </ThemedSection>
         <ThemedSection
-          id="acuarela"
-          title=""
-          eyebrow=""
-          description=""
-         
-        >
-          <Acuarela />
-        </ThemedSection>
-        <ThemedSection
-          id="slot"
-          title="777 Vertical: azar creativo"
-          eyebrow="Sesión 04"
-          description="Giramos las columnas y dejamos que la suerte combine personajes, fondos y objetos. Perfecto para improvisar historias rápidas."
-          highlights={[
-            { icon: '🎰', title: 'Azar juguetón', text: 'Gira la máquina cuantas veces quieras hasta descubrir combinaciones que te sorprendan.' },
-            { icon: '🔁', title: 'Secuencias infinitas', text: 'Guía a lxs peques para conectar resultados al azar con relatos colaborativos.' },
-            { icon: '💡', title: 'Historias instantáneas', text: 'Usa cada tirada como disparador para dibujar, cantar o actuar en minutos.' },
-          ]}
-        >
-          <Slot777Vertical />
-        </ThemedSection>
-        <ThemedSection
           id="laboratorio"
-          title="Laboratorio de lava"
-          eyebrow="Experimento sensorial"
-          description="Luces neón, burbujas y movimientos hipnóticos. Este laboratorio invita a observar la magia líquida con atención plena."
+          title="Experimentos de ciencia con monstruos de lava"
+          eyebrow="Capítulo 03"
+          description="Exploramos la materia en movimiento con un laboratorio digital inspirado en las lámparas de lava. Ideal para observar, formular hipótesis y dejarse maravillar."
           highlights={[
-            { icon: '🧪', title: 'Magia líquida', text: 'Simula una lámpara de lava interactiva que cambia según el ritmo de tus clicks.' },
-            { icon: '🌈', title: 'Paleta vibrante', text: 'Explora combinaciones neón que evocan ciencia ficción amable.' },
-            { icon: '🤲', title: 'Experiencia segura', text: 'Ideal para momentos de pausa o meditación guiada con niñxs.' },
+            { icon: '🧪', title: 'Química imaginada', text: 'Simula mezclas viscosas que reaccionan a tus clics y generan criaturas danzantes.' },
+            { icon: '🌈', title: 'Paletas neón', text: 'Juega con combinaciones de color que remiten a experimentos lumínicos.' },
+            { icon: '🌀', title: 'Observación pausada', text: 'Una experiencia para respirar, enfocarse y narrar lo que sucede dentro del tubo.' },
           ]}
         >
           <LavaLampLab />
         </ThemedSection>
         <ThemedSection
           id="mesa"
-          title="Juego de mesa: autocuidado"
-          eyebrow="Sesión comunitaria"
-          description="Cerramos el recorrido trasladando lo aprendido a un tablero colaborativo que invita a cuidarnos mutuamente."
-          highlights={[
-            { icon: '🎲', title: 'Cooperación', text: 'Avanza en equipo superando retos que invitan a escucharnos.' },
-            { icon: '💞', title: 'Cuidado colectivo', text: 'Cada casilla es una excusa para compartir cómo nos sentimos.' },
-            { icon: '🪴', title: 'Rutinas amables', text: 'Construyan juntos hábitos y recordatorios para sostener el bienestar.' },
-          ]}
+          title="Juego de mesa sobre el autocuidado"
+          eyebrow="Capítulo 04"
+          description="Convertimos las reflexiones en movimiento con un tablero colaborativo. Las casillas proponen retos, preguntas y abrazos que fortalecen el cuidado mutuo."
+       
         >
           <AutoCuidadoBoard />
+        </ThemedSection>
+        <ThemedSection
+          id="acuarela"
+          title="Pintura en acuarela"
+          eyebrow="Capítulo 05"
+          description="El agua, el pigmento y el papel se encuentran en una experiencia que celebra los gestos espontáneos. Esta herramienta digital imita manchas, veladuras y texturas húmedas."
+         
+        >
+          <Acuarela />
+        </ThemedSection>
+        <ThemedSection
+          id="slot"
+          title="El animalario"
+          eyebrow="Capítulo 06"
+          description="Cerramos jugando con el azar. Este animalario digital combina cabezas, cuerpos y patas para inventar criaturas improbables que inspiran historias nuevas."
+          highlights={[
+            { icon: '🎰', title: 'Combinatoria lúdica', text: 'Gira las columnas y descubre mezclas inesperadas de rasgos y texturas.' },
+            { icon: '🐾', title: 'Catálogo infinito', text: 'Guarda tus criaturas favoritas para dibujarlas, animarlas o darles voz.' },
+            { icon: '🗣️', title: 'Narraciones instantáneas', text: 'Usa cada combinación como disparador para crear relatos colectivos.' },
+          ]}
+        >
+          <Slot777Vertical />
         </ThemedSection>
         <ThemedSection
           id="sobre"

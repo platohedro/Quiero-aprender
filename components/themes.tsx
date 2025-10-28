@@ -341,12 +341,12 @@ export function ThemedSection({ id, title, children, eyebrow, description, highl
 export function TopNav({ current, onChange }: { current: string; onChange: (id: string) => void }) {
   const tabs = [
     { id: 'inicio', label: 'Inicio' },
-    { id: 'semillas', label: 'Semillas' },
-    { id: 'galeria', label: 'Galería' },
-    { id: 'acuarela', label: 'Acuarela' },
-    { id: 'slot', label: 'Ruleta' },
-    { id: 'laboratorio', label: 'LavaLab' },
-    { id: 'mesa', label: 'Autocuidado' },
+    { id: 'semillas', label: 'Cuidado de la semilla' },
+    { id: 'galeria', label: 'Personajes fantásticos' },
+    { id: 'laboratorio', label: 'Monstruos de lava' },
+    { id: 'mesa', label: 'Juego de autocuidado' },
+    { id: 'acuarela', label: 'Pintura en acuarela' },
+    { id: 'slot', label: 'Animalario' },
     { id: 'sobre', label: 'Sobre' },
     { id: 'creditos', label: 'Créditos' },
   ];
