@@ -454,12 +454,10 @@ export default function Acuarela() {
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 bg-clip-text text-transparent drop-shadow-2xl mb-4 animate-pulse">
             🚀 Pinta tu Galaxia 🌟
           </h1>
-          <p className="text-white text-lg md:text-xl font-medium opacity-90 drop-shadow-lg">
-            Crea mundos mágicos con acuarela interestelar
-          </p>
+        
           <div className="flex justify-center gap-4 mt-4 text-2xl animate-bounce">
             <span style={{animationDelay: '0s'}}>🛸</span>
-            <span style={{animationDelay: '0.5s'}}>👽</span>
+ 
             <span style={{animationDelay: '1s'}}>🌙</span>
             <span style={{animationDelay: '1.5s'}}>⭐</span>
             <span style={{animationDelay: '2s'}}>🪐</span>
@@ -509,7 +507,7 @@ export default function Acuarela() {
       <section className="mt-10 w-full max-w-5xl rounded-3xl border border-white/30 bg-white/10 p-6 backdrop-blur-lg shadow-2xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-white drop-shadow-lg">Galería de inspiración en óleo</h2>
+            <h2 className="text-2xl font-semibold text-white drop-shadow-lg">Galería de inspiración en acuarela</h2>
             <p className="mt-1 max-w-2xl text-sm text-slate-100/80 leading-relaxed">
               Mira cómo la luz acaricia el pigmento y deja que estas obras guíen tus contrastes, texturas y mezclas.
             </p>
@@ -527,7 +525,7 @@ export default function Acuarela() {
               <div className="relative aspect-[3/4] w-full overflow-hidden">
                 <Image
                   src={src}
-                  alt={`Referencia de óleo ${index + 1}`}
+                  alt={`Referencia de acuarela ${index + 1}`}
                   fill
                   className="object-cover transition duration-700 group-hover:scale-105"
                   sizes="(min-width: 1280px) 23vw, (min-width: 1024px) 28vw, (min-width: 768px) 45vw, 90vw"
@@ -535,7 +533,7 @@ export default function Acuarela() {
                 />
               </div>
               <figcaption className="border-t border-white/40 bg-white/30 px-4 py-3 text-sm font-medium text-slate-800">
-                {`Referencia de óleo ${index + 1}`}
+                {`Referencia de acuarela ${index + 1}`}
               </figcaption>
             </figure>
           ))}

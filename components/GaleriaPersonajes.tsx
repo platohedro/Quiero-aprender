@@ -94,7 +94,7 @@ export default function GaleriaPersonajes() {
 
   const sceneConfig = useMemo(
     () => ({
-      atrilModel: "/3d/atril.fbx",
+      atrilModel: "/3d/atril2.fbx",
       characters: personajeActivo
         ? [
             {
