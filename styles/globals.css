@@ -2,10 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { height: 100%; }
-body { @apply bg-gradient-to-b from-sky-50 to-emerald-50 text-gray-900 font-sans; }
+:root {
+  --color-sky: #80c1dd;
+  --color-rose: #f2aadc;
+  --color-lime: #dcf2aa;
+  --color-lavender: #c0aaf2;
+  --color-ink: #1d1b29;
+  --color-paper: #fbfafc;
+}
 
-h1, h2, h3, h4, h5, h6 {
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply font-sans;
+  background:
+    radial-gradient(circle at 50% 18%, var(--color-sky) 0%, var(--color-paper) 46%),
+    linear-gradient(150deg, var(--color-lavender) 0%, var(--color-rose) 52%, var(--color-lime) 100%);
+  color: var(--color-ink);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-oswald), sans-serif;
   letter-spacing: 0.02em;
+  color: var(--color-ink);
 }

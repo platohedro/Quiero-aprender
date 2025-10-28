@@ -5,6 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, OrbitControls, useFBX } from "@react-three/drei";
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { Box3, DoubleSide, Group, OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
+import { PALETTE } from "@/components/palette";
 
 type CharacterConfig = {
   id: string;
@@ -39,6 +40,7 @@ type AtrilSceneProps = {
   autoRotate?: boolean;
 };
 
+
 function FBXModel({
   url,
   scale = 1,
@@ -69,6 +71,9 @@ function FBXModel({
 
     const scratch = new Vector3();
     const baseCandidates: Array<{ mesh: any; bounds: Box3 }> = [];
+    const footprintMeshes: any[] = [];
+
+    clone.updateMatrixWorld(true);
 
     clone.traverse((child: any) => {
       if (child.isMesh) {
@@ -96,15 +101,36 @@ function FBXModel({
           const meshBounds = new Box3().setFromObject(child);
           baseCandidates.push({ mesh: child, bounds: meshBounds });
         }
-        const applySide = (material: any) => {
-          if (material && typeof material === "object" && "side" in material) {
+        if (alignBottom) {
+          footprintMeshes.push(child);
+        }
+        const tuneMaterial = (material: any) => {
+          if (!material || typeof material !== "object") {
+            return;
+          }
+          if ("side" in material) {
             material.side = DoubleSide;
+          }
+          if ("transparent" in material) {
+            material.transparent = false;
+          }
+          if ("opacity" in material && typeof material.opacity === "number") {
+            material.opacity = 1;
+          }
+          if ("depthWrite" in material) {
+            material.depthWrite = true;
+          }
+          if ("alphaTest" in material) {
+            material.alphaTest = 0;
+          }
+          if ("needsUpdate" in material) {
+            material.needsUpdate = true;
           }
         };
         if (Array.isArray(child.material)) {
-          child.material.forEach(applySide);
+          child.material.forEach(tuneMaterial);
         } else {
-          applySide(child.material);
+          tuneMaterial(child.material);
         }
       }
     });
@@ -113,6 +139,38 @@ function FBXModel({
     const center = box.getCenter(new Vector3());
     const size = box.getSize(new Vector3());
     const offsetY = alignBottom ? box.min.y : center.y;
+
+    let baseCenter = center.clone();
+    if (alignBottom && footprintMeshes.length > 0) {
+      clone.updateMatrixWorld(true);
+      const vertex = new Vector3();
+      const worldVertex = new Vector3();
+      const footprintThreshold = box.min.y + Math.max(size.y * 0.02, 0.004);
+      let sumX = 0;
+      let sumZ = 0;
+      let counted = 0;
+
+      for (const mesh of footprintMeshes) {
+        if (!mesh.visible || !mesh.geometry?.attributes?.position) {
+          continue;
+        }
+        const position = mesh.geometry.attributes.position;
+        for (let i = 0; i < position.count; i++) {
+          vertex.set(position.getX(i), position.getY(i), position.getZ(i));
+          worldVertex.copy(vertex).applyMatrix4(mesh.matrixWorld);
+          if (worldVertex.y <= footprintThreshold) {
+            sumX += worldVertex.x;
+            sumZ += worldVertex.z;
+            counted += 1;
+          }
+        }
+      }
+
+      if (counted > 0) {
+        baseCenter.x = sumX / counted;
+        baseCenter.z = sumZ / counted;
+      }
+    }
 
     if (isAtrilModel && baseCandidates.length > 0) {
       const totalHeight = Math.max(size.y, 0.001);
@@ -135,7 +193,9 @@ function FBXModel({
       });
     }
 
-    clone.position.set(-center.x, -offsetY, -center.z);
+    const offsetX = alignBottom ? baseCenter.x : center.x;
+    const offsetZ = alignBottom ? baseCenter.z : center.z;
+    clone.position.set(-offsetX, -offsetY, -offsetZ);
 
     const wrapper = new Group();
     wrapper.add(clone);
@@ -183,19 +243,19 @@ function AtrilPlaceholder() {
     <group position={[0, 0, 0]}>
       <mesh castShadow receiveShadow position={[0, 0.05, 0]}>
         <cylinderGeometry args={[0.6, 0.6, 0.1, 24]} />
-        <meshStandardMaterial color="#475569" metalness={0.2} roughness={0.4} />
+        <meshStandardMaterial color={PALETTE.sky} metalness={0.15} roughness={0.45} />
       </mesh>
       <mesh castShadow receiveShadow position={[0, 0.6, 0]}>
         <cylinderGeometry args={[0.08, 0.12, 1.2, 16]} />
-        <meshStandardMaterial color="#64748b" metalness={0.15} roughness={0.5} />
+        <meshStandardMaterial color={PALETTE.lavender} metalness={0.12} roughness={0.5} />
       </mesh>
       <mesh castShadow receiveShadow position={[0, 1.15, -0.25]} rotation={[-0.45, 0, 0]}>
         <boxGeometry args={[1.2, 0.05, 0.8]} />
-        <meshStandardMaterial color="#334155" metalness={0.1} roughness={0.3} />
+        <meshStandardMaterial color={PALETTE.rose} metalness={0.12} roughness={0.4} />
       </mesh>
       <mesh castShadow receiveShadow position={[0, 1.25, -0.32]} rotation={[-0.45, 0, 0]}>
         <planeGeometry args={[1.1, 0.7]} />
-        <meshStandardMaterial color="#0f172a" />
+        <meshStandardMaterial color={PALETTE.paper} />
       </mesh>
     </group>
   );
@@ -234,6 +294,33 @@ function CharacterPlaceholder({
   );
 }
 
+function GalleryBackdrop() {
+  return (
+    <group>
+      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.006, 0]}>
+        <circleGeometry args={[2.45, 64]} />
+        <meshStandardMaterial color={PALETTE.lavender} metalness={0.18} roughness={0.5} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.004, 0]}>
+        <ringGeometry args={[2.1, 2.35, 64]} />
+        <meshStandardMaterial color={PALETTE.rose} metalness={0.2} roughness={0.45} />
+      </mesh>
+      <mesh position={[0, 1.4, -1.6]} rotation={[0, 0, 0]}>
+        <planeGeometry args={[5.2, 3.2]} />
+        <meshStandardMaterial color={PALETTE.sky} metalness={0.1} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 1.8, -1.9]} rotation={[0, 0, 0]}>
+        <planeGeometry args={[4.2, 2.4]} />
+        <meshStandardMaterial color={PALETTE.lime} metalness={0.08} roughness={0.65} />
+      </mesh>
+      <mesh position={[0, 2.45, -2.1]}>
+        <planeGeometry args={[2.2, 1.1]} />
+        <meshStandardMaterial emissive={PALETTE.sky} emissiveIntensity={0.12} color={PALETTE.lavender} roughness={0.35} />
+      </mesh>
+    </group>
+  );
+}
+
 function CameraRig({
   target,
   height,
@@ -252,12 +339,12 @@ function CameraRig({
     }
 
     const safeHeight = Math.max(height, 0.8);
-    const margin = 1.45;
+    const margin = 1.25;
     const fovRad = (perspectiveCamera.fov * Math.PI) / 180;
     const coverageDistance = ((safeHeight / 2) / Math.tan(fovRad / 2)) * margin;
-    const distance = Math.max(5.2, coverageDistance);
-    const lateralOffset = Math.min(Math.max(safeHeight * 0.18, 0.45), 1.05);
-    const verticalOffset = Math.max(safeHeight * 0.55, 1.25);
+    const distance = Math.max(4.2, coverageDistance);
+    const lateralOffset = Math.min(Math.max(safeHeight * 0.16, 0.38), 0.95);
+    const verticalOffset = Math.max(safeHeight * 0.52, 1.15);
 
     perspectiveCamera.fov = 28;
     perspectiveCamera.position.set(
@@ -270,8 +357,8 @@ function CameraRig({
 
     if (controls?.current) {
       controls.current.target.set(target[0], target[1], target[2]);
-      controls.current.minDistance = Math.max(distance * 0.85, 3.5);
-      controls.current.maxDistance = distance * 2.4;
+      controls.current.minDistance = Math.max(distance * 0.55, 2.2);
+      controls.current.maxDistance = distance * 2.2;
       controls.current.update();
     }
   }, [camera, controls, height, target]);
@@ -457,65 +544,77 @@ export default function AtrilScene({
   const focusTarget = frame.target;
 
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-3xl border border-slate-200 bg-slate-900">
+    <div className="relative h-[420px] w-full overflow-hidden rounded-3xl border border-brand-lavender/30 bg-[rgba(29,27,41,0.85)]">
       <Canvas
         shadows
         camera={{ position: [0, 2.8, 6.2], fov: 28 }}
         dpr={[1, 1.8]}
       >
-        <color attach="background" args={["#06080d"]} />
-        <ambientLight intensity={0.25} color="#f4f7ff" />
-        <hemisphereLight intensity={0.85} groundColor="#06080d" color="#f1f5f9" />
+        <color attach="background" args={["#1c1a2a"]} />
+        <ambientLight intensity={0.55} color="#f8f9ff" />
+        <hemisphereLight intensity={0.85} groundColor={PALETTE.ink} color="#d4ddff" />
         <directionalLight
           castShadow
           position={[5.5, 6.5, 4]}
-          intensity={2.6}
+          intensity={3.2}
+          color="#ffffff"
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
         <directionalLight
           position={[-4.5, 5.5, -3.8]}
-          intensity={0.7}
-          color="#fef3f5"
+          intensity={0.9}
+          color={PALETTE.rose}
         />
         <spotLight
           castShadow
-          position={[-3.2, 4.8, 2.2]}
+          position={[-2.4, 4.6, 2.6]}
           angle={Math.PI / 6}
-          penumbra={0.6}
-          intensity={3.1}
-          color="#ffe1b0"
+          penumbra={0.72}
+          intensity={3.2}
+          color={PALETTE.rose}
           distance={16}
           decay={1.05}
           shadow-bias={-0.00016}
         />
         <spotLight
           castShadow
-          position={[3.2, 4.8, 2.2]}
-          angle={Math.PI / 6}
-          penumbra={0.6}
-          intensity={3.1}
-          color="#cfe6ff"
+          position={[2.8, 4.5, 2.8]}
+          angle={Math.PI / 6.2}
+          penumbra={0.68}
+          intensity={3.2}
+          color={PALETTE.sky}
           distance={16}
           decay={1.05}
           shadow-bias={-0.00016}
+        />
+        <spotLight
+          castShadow
+          position={[0.8, 4.2, 3.2]}
+          angle={Math.PI / 5.2}
+          penumbra={0.62}
+          intensity={4.1}
+          color="#fdfbff"
+          distance={18}
+          decay={1.03}
+          shadow-bias={-0.00011}
         />
         <spotLight
           position={[0, 5.8, -3.5]}
           angle={Math.PI / 5}
-          penumbra={0.45}
-          intensity={1.9}
-          color="#f0f4ff"
-          distance={20}
-          decay={1.05}
+          penumbra={0.52}
+          intensity={2.1}
+          color="#edefff"
+          distance={22}
+          decay={1.02}
         />
         <spotLight
           castShadow
           position={[0, 6.4, 1.4]}
           angle={Math.PI / 7}
           penumbra={0.5}
-          intensity={3.6}
-          color="#fff0d6"
+          intensity={2.8}
+          color={PALETTE.lime}
           distance={14}
           decay={1.02}
           shadow-mapSize-width={1024}
@@ -528,8 +627,8 @@ export default function AtrilScene({
           position={[0, 2.2, -4.8]}
           angle={Math.PI / 4}
           penumbra={0.35}
-          intensity={1.2}
-          color="#bcd7ff"
+          intensity={1.3}
+          color="#dbe1ff"
           distance={22}
           decay={1.1}
         >
@@ -540,42 +639,50 @@ export default function AtrilScene({
         <group>
           <pointLight
             position={[focusTarget[0] + 0.4, focusTarget[1] + 0.9, focusTarget[2] + 0.3]}
-            color="#ffdbaa"
-            intensity={3.2}
-            distance={6.5}
-            decay={1.1}
+            color="#ffe3cb"
+            intensity={3.1}
+            distance={7.4}
+            decay={1.06}
           />
           <pointLight
             position={[focusTarget[0] - 0.6, focusTarget[1] + 0.6, focusTarget[2] - 0.2]}
-            color="#d6e8ff"
-            intensity={2.4}
-            distance={5.5}
-            decay={1.15}
+            color="#e4f2ff"
+            intensity={2.7}
+            distance={6.4}
+            decay={1.12}
           />
           <pointLight
             position={[focusTarget[0], focusTarget[1] + 1.6, focusTarget[2] - 0.8]}
-            color="#fff6e5"
-            intensity={1.8}
-            distance={7}
+            color="#f4ffe3"
+            intensity={2}
+            distance={7.6}
             decay={1.05}
+          />
+          <pointLight
+            position={[focusTarget[0], focusTarget[1] + 0.4, focusTarget[2] + 0.6]}
+            color="#ebe6ff"
+            intensity={1.8}
+            distance={5.8}
+            decay={1.08}
           />
         </group>
 
         <Suspense fallback={null}>
+          <GalleryBackdrop />
           <SceneContents
             atrilModel={resolvedAtrilModel}
             characters={characters}
             onFrameChange={handleFrameChange}
           />
-          <Environment preset="studio" />
+          <Environment preset="lobby" />
         </Suspense>
 
         <ContactShadows
           position={[0, -0.01, 0]}
-          opacity={0.0}
-          scale={0}
-          blur={0}
-          far={0}
+          opacity={0.38}
+          scale={6.4}
+          blur={2.8}
+          far={4.6}
         />
         <OrbitControls
           ref={controlsRef}

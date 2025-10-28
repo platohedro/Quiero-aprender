@@ -115,17 +115,17 @@ export default function GaleriaPersonajes() {
   return (
     <div className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
-        <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
+        <div className="space-y-4 rounded-2xl border border-brand-lavender/30 bg-brand-paper/85 p-5 shadow-[0_14px_32px_rgba(29,27,41,0.08)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-amber-900">{personajeActivo?.nombre}</h3>
-              <p className="mt-1 text-sm text-amber-900/80 leading-relaxed">
+              <h3 className="text-lg font-semibold text-brand-ink">{personajeActivo?.nombre}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-brand-ink/75">
                 {personajeActivo?.descripcion ?? "Selecciona un personaje para verlo sobre el atril."}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-amber-800/70">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-brand-ink/60">
               <span>{indiceActual + 1}</span>
-              <span className="text-amber-800/40">/</span>
+              <span className="text-brand-ink/30">/</span>
               <span>{personajesEscena.length}</span>
             </div>
           </div>
@@ -134,14 +134,14 @@ export default function GaleriaPersonajes() {
             <button
               type="button"
               onClick={handleAnterior}
-              className="rounded-full border border-amber-200 bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900 transition hover:border-amber-300 hover:bg-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+              className="rounded-full border border-brand-lavender/40 bg-brand-paper px-4 py-2 text-sm font-medium text-brand-ink transition hover:border-brand-lavender/60 hover:bg-brand-lavender/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-lavender/60"
             >
               Anterior
             </button>
             <button
               type="button"
               onClick={handleSiguiente}
-              className="rounded-full border border-amber-200 bg-amber-100 px-4 py-2 text-sm font-medium text-amber-900 transition hover:border-amber-300 hover:bg-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+              className="rounded-full border border-brand-lavender/40 bg-brand-paper px-4 py-2 text-sm font-medium text-brand-ink transition hover:border-brand-lavender/60 hover:bg-brand-sky/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-sky/50"
             >
               Siguiente
             </button>
@@ -150,9 +150,9 @@ export default function GaleriaPersonajes() {
           {personajeActivo?.ficha && (
             <div className="space-y-3 pt-2">
               {personajeActivo.ficha.map((item, index) => (
-                <div key={`${personajeActivo.id}-ficha-${index}`} className="rounded-xl border border-amber-200 bg-amber-100/60 p-3">
-                  <h4 className="text-sm font-semibold text-amber-900 tracking-wide uppercase">{item.titulo}</h4>
-                  <p className="mt-1 text-sm text-amber-900/80 leading-relaxed">{item.descripcion}</p>
+                <div key={`${personajeActivo.id}-ficha-${index}`} className="rounded-xl border border-brand-lavender/30 bg-brand-paper/80 p-3 shadow-[0_8px_20px_rgba(29,27,41,0.05)]">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-brand-ink">{item.titulo}</h4>
+                  <p className="mt-1 text-sm leading-relaxed text-brand-ink/75">{item.descripcion}</p>
                 </div>
               ))}
             </div>

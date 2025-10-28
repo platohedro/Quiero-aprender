@@ -1,14 +1,15 @@
 "use client";
 import React, { useRef } from "react";
+import { PALETTE } from "@/components/palette";
 
 type Semilla = { id: string; nombre: string; color: string; frecuenciaHz: number };
 
 const SEMILLAS: Semilla[] = [
-  { id: 's1', nombre: 'Fríjol', color: '#8B4513', frecuenciaHz: 392 },
-  { id: 's2', nombre: 'Maíz', color: '#facc15', frecuenciaHz: 523.25 },
-  { id: 's3', nombre: 'Girasol', color: '#f59e0b', frecuenciaHz: 659.25 },
-  { id: 's4', nombre: 'Cacao', color: '#6b4423', frecuenciaHz: 440 },
-  { id: 's5', nombre: 'Aguacate', color: '#16a34a', frecuenciaHz: 349.23 },
+  { id: "s1", nombre: "Fríjol", color: PALETTE.lime, frecuenciaHz: 392 },
+  { id: "s2", nombre: "Maíz", color: PALETTE.sky, frecuenciaHz: 523.25 },
+  { id: "s3", nombre: "Girasol", color: PALETTE.rose, frecuenciaHz: 659.25 },
+  { id: "s4", nombre: "Cacao", color: PALETTE.lavender, frecuenciaHz: 440 },
+  { id: "s5", nombre: "Aguacate", color: "rgba(128,193,221,0.65)", frecuenciaHz: 349.23 },
 ];
 
 function useAudioContext() {
@@ -44,17 +45,20 @@ function SeedTile({ s }: { s: Semilla }) {
   return (
     <button
       onClick={play}
-      className="group relative overflow-hidden rounded-2xl border shadow bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      className="group relative overflow-hidden rounded-2xl border border-brand-lavender/30 bg-brand-paper/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-sky/60"
       aria-label={`Semilla ${s.nombre}, reproducir sonido`}
     >
-      <div className="p-4 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full border" style={{ background: s.color }} />
+      <div className="flex items-center gap-4 p-4">
+        <div
+          className="h-16 w-16 rounded-full border border-brand-paper/80 shadow-inner"
+          style={{ background: s.color }}
+        />
         <div className="text-left">
-          <div className="font-semibold">{s.nombre}</div>
-          <div className="text-xs text-gray-500">Toca para oír ({Math.round(s.frecuenciaHz)} Hz)</div>
+          <div className="font-semibold text-brand-ink">{s.nombre}</div>
+          <div className="text-xs text-brand-ink/60">Toca para oír ({Math.round(s.frecuenciaHz)} Hz)</div>
         </div>
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-400 via-yellow-300 to-amber-400 opacity-0 group-active:opacity-100 transition" />
+      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-brand-sky via-brand-lavender to-brand-rose opacity-0 transition group-active:opacity-100" />
     </button>
   );
 }
@@ -62,8 +66,11 @@ function SeedTile({ s }: { s: Semilla }) {
 export default function SemillasSonoras() {
   return (
     <div>
-      <p className="mb-4 text-gray-700">Toca una semilla para escuchar su sonido. (WebAudio; luego podemos usar archivos .mp3/.wav propios.)</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <p className="mb-4 text-sm leading-relaxed text-brand-ink/70">
+        Toca una semilla para escuchar su sonido. Más adelante podemos reemplazar estas notas por
+        grabaciones propias.
+      </p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
         {SEMILLAS.map((s) => (
           <SeedTile key={s.id} s={s} />
         ))}

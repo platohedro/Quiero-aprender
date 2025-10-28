@@ -49,34 +49,38 @@ function Inicio() {
   ];
 
   return (
-    <div className="space-y-4 text-slate-800">
-      <p className="text-base md:text-lg leading-relaxed">
-        Yo Quiero Aprender es una <strong>ruta interactiva</strong> pensada para niñas y niños curiosos. Cada parada reúne arte, música y juego para acompañar procesos creativos en casa o en talleres.
+    <div className="space-y-4 text-brand-ink">
+      <p className="text-base leading-relaxed md:text-lg">
+        Yo Quiero Aprender es una <strong>ruta interactiva</strong> pensada para niñas y niños curiosos. Cada
+        parada reúne arte, música y juego para acompañar procesos creativos en casa o en talleres.
       </p>
-      <p className="text-sm md:text-base text-slate-600">
-        Desplázate con calma, respira y deja que cada sesión vaya contando la historia. Encontrarás instrucciones suaves en las tarjetas a la izquierda y el laboratorio vivo a la derecha.
+      <p className="text-sm text-brand-ink/70 md:text-base">
+        Desplázate con calma, respira y deja que cada sesión vaya contando la historia. Encontrarás instrucciones
+        suaves en las tarjetas a la izquierda y el laboratorio vivo a la derecha.
       </p>
       <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {sesiones.map((sesion) => (
           <a
             key={sesion.id}
             href={`#${sesion.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-emerald-200/70 bg-white/85 shadow-[0_16px_35px_rgba(16,185,129,0.12)] transition-all duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_24px_50px_rgba(16,185,129,0.22)]"
+            className="group relative overflow-hidden rounded-2xl border border-brand-lavender/30 bg-brand-paper/90 shadow-[0_16px_32px_rgba(29,27,41,0.06)] transition-all duration-200 hover:-translate-y-1 hover:border-brand-lavender/50 hover:shadow-[0_24px_48px_rgba(29,27,41,0.08)]"
             aria-label={`Ir a ${sesion.title}`}
           >
-            <div className="absolute inset-x-0 -top-16 h-32 bg-gradient-to-br from-emerald-200/60 via-emerald-100/40 to-white/0 blur-2xl transition-opacity duration-200 group-hover:opacity-80" aria-hidden />
+            <div
+              className="absolute inset-x-0 -top-16 h-32 bg-[radial-gradient(circle_at_top,var(--color-sky)_0%,rgba(255,255,255,0.1)_70%)] opacity-80 blur-2xl transition-opacity duration-200 group-hover:opacity-100"
+              aria-hidden
+            />
             <div className="relative flex items-start gap-4 p-5">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-2xl shadow-inner" aria-hidden>
+              <span
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-sky/40 text-2xl text-brand-ink shadow-inner"
+                aria-hidden
+              >
                 {sesion.icon}
               </span>
               <div className="space-y-2">
-                <h3 className="font-display text-lg font-semibold text-emerald-900">
-                  {sesion.title}
-                </h3>
-                <p className="text-sm text-emerald-900/80 leading-relaxed">
-                  {sesion.description}
-                </p>
-                <span className="inline-flex items-center gap-2 text-sm font-display font-semibold uppercase tracking-wide text-emerald-700">
+                <h3 className="font-display text-lg font-semibold text-brand-ink">{sesion.title}</h3>
+                <p className="text-sm leading-relaxed text-brand-ink/70">{sesion.description}</p>
+                <span className="inline-flex items-center gap-2 text-sm font-display font-semibold uppercase tracking-wide text-brand-ink/60">
                   Explorar
                   <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
                 </span>
@@ -91,11 +95,11 @@ function Inicio() {
 
 function Sobre() {
   return (
-    <div className="space-y-4 text-slate-700">
+    <div className="space-y-4 text-brand-ink/80">
       <p>
         Yo Quiero Aprender nació dentro de <strong>Platohedro</strong> como un laboratorio que combina pedagogías sensibles, fabricación digital y expresión artística. Esta versión es un prototipo que seguirá creciendo con lo que descubramos junto a lxs niñxs.
       </p>
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-brand-ink/60">
         Próximos pasos: integrar cámaras para subir imágenes reales, conservar combinaciones favoritas y abrir más guías para acompañantes y facilitadorxs.
       </p>
     </div>
@@ -104,15 +108,18 @@ function Sobre() {
 
 function Creditos() {
   return (
-    <div className="space-y-3 text-slate-200">
+    <div className="space-y-3 text-brand-paper">
       <p>
         <strong>Diseño y facilitación:</strong> Equipo Yo Quiero Aprender · Conexión Platohedro
       </p>
       <p>
         <strong>Desarrollo y prototipado:</strong> Tecnologías abiertas (Next.js, TypeScript, TailwindCSS) y mucho cariño colaborativo.
       </p>
-      <p className="text-sm text-slate-400">
-        Escríbenos para sumar ideas, proponer mejoras o llevar Yo Quiero Aprender a tu comunidad: <a className="underline decoration-amber-300/70" href="mailto:hola@platohedro.org">hola@platohedro.org</a>
+      <p className="text-sm text-brand-paper/70">
+        Escríbenos para sumar ideas, proponer mejoras o llevar Yo Quiero Aprender a tu comunidad:{" "}
+        <a className="underline decoration-brand-rose/70" href="mailto:hola@platohedro.org">
+          hola@platohedro.org
+        </a>
       </p>
     </div>
   );
@@ -206,24 +213,16 @@ export default function YoQuieroAprenderApp() {
           title="Galería de personajes imaginarios"
           eyebrow="Sesión 02"
           description="Vamos dando cara a las historias. Aquí viven criaturas fantásticas creadas por lxs peques, listas para inspirar nuevos relatos."
-          highlights={[
-            { icon: '🧚', title: 'Amigxs con historia', text: 'Cada personaje guarda un gesto, un color y una emoción para recordar.' },
-            { icon: '📸', title: 'Memoria visual', text: 'Observa, describe y enlaza la galería con las experiencias de la sesión anterior.' },
-            { icon: '🧵', title: 'Tejido colectivo', text: 'Conecta personajes entre sí y construye nuevas escenas en grupo.' },
-          ]}
+          
         >
           <GaleriaPersonajes />
         </ThemedSection>
         <ThemedSection
           id="acuarela"
-          title="Pintura tipo acuarela digital"
-          eyebrow="Sesión 03"
-          description="Del sonido pasamos a la imagen fluida. Las manchas se expanden y los colores se mezclan como si tocaras papeles húmedos."
-          highlights={[
-            { icon: '🎨', title: 'Manchas vivas', text: 'Pinta con herramientas acuosas que se mueven, respiran y transforman la pantalla.' },
-            { icon: '💧', title: 'Calma y respiración', text: 'Observa cómo el agua digital reacciona a la presión y al tiempo que esperas.' },
-            { icon: '🖌️', title: 'Pinceles experimentales', text: 'Selecciona trazos con textura, brillo o degradados y mezcla tus propias paletas.' },
-          ]}
+          title=""
+          eyebrow=""
+          description=""
+         
         >
           <Acuarela />
         </ThemedSection>

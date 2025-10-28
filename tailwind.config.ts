@@ -7,6 +7,16 @@ const config: Config = {
         sans: ["var(--font-roboto-condensed)", "sans-serif"],
         display: ["var(--font-oswald)", "sans-serif"],
       },
+      colors: {
+        brand: {
+          sky: "var(--color-sky)",
+          rose: "var(--color-rose)",
+          lime: "var(--color-lime)",
+          lavender: "var(--color-lavender)",
+          ink: "var(--color-ink)",
+          paper: "var(--color-paper)",
+        },
+      },
     },
   },
   plugins: [],
