@@ -67,7 +67,17 @@ export function ThemedSection({ id, title, children, eyebrow, description, highl
   );
 }
 
-export function TopNav({ current, onChange }: { current: string; onChange: (id: string) => void }) {
+function ChaptersDropdown({ 
+  current, 
+  onChange, 
+  isOpen, 
+  onToggle 
+}: { 
+  current: string; 
+  onChange: (id: string) => void; 
+  isOpen: boolean; 
+  onToggle: () => void;
+}) {
   const tabs = [
     { id: "inicio", label: "Inicio" },
     { id: "semillas", label: "Cuidado de la semilla" },
@@ -84,18 +94,61 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
     (tab) => !["inicio", "sobre", "creditos"].includes(tab.id)
   );
 
+  const handleChapterSelect = (id: string) => {
+    onChange(id);
+    onToggle();
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className="relative whitespace-nowrap rounded-full border-2 border-black bg-white px-4 py-1.5 transition-transform duration-150 hover:-translate-y-1 text-[#334155]"
+        style={{ boxShadow: `4px 4px 0 #80C1DD` }}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+      >
+        Capítulos
+      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-[calc(100%+1.25rem)] z-[60] w-[min(640px,calc(100vw-2rem))] rounded-[32px] border-2 border-black bg-white p-5 shadow-[12px_12px_0_#F2AADC]">
+          <p className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.3em] text-[#334155]">
+            Capítulos
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {chapterTabs.map((chapter, idx) => {
+              const color = SHADOW_COLORS[(idx + 1) % SHADOW_COLORS.length];
+              const isChapterActive = current === chapter.id;
+              return (
+                <button
+                  key={chapter.id}
+                  onClick={() => handleChapterSelect(chapter.id)}
+                  className={`sticker-card flex w-full flex-col gap-2 text-left text-sm font-semibold ${
+                    isChapterActive ? "ring-2 ring-offset-2 ring-offset-white ring-[#0f172a]" : ""
+                  }`}
+                  style={{ "--shadow-color": color } as CSSProperties}
+                >
+                  <span className="text-xs uppercase tracking-[0.25em] text-[#475569]">{`Capítulo ${idx + 1}`}</span>
+                  <span className="font-display text-base text-[#0f172a]">{chapter.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function TopNav({ current, onChange }: { current: string; onChange: (id: string) => void }) {
   const [chaptersOpen, setChaptersOpen] = useState(false);
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-  const chaptersButtonRef = useRef<HTMLButtonElement | null>(null);
-  const chapterWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (
-        chapterWrapperRef.current &&
-        !chapterWrapperRef.current.contains(target)
-      ) {
+      const chaptersElement = document.querySelector('[data-chapters-dropdown]');
+      if (chaptersElement && !chaptersElement.contains(target)) {
         setChaptersOpen(false);
       }
     };
@@ -112,23 +165,50 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
     };
   }, []);
 
-  useEffect(() => {
-    if (!chapterTabs.some((tab) => tab.id === current)) {
-      setChaptersOpen(false);
-    }
-  }, [current, chapterTabs]);
-
-  const handleChapterSelect = (id: string) => {
-    setChaptersOpen(false);
-    onChange(id);
+  const toggleChapters = () => {
+    setChaptersOpen(!chaptersOpen);
   };
+
+  const toggleMobile = () => {
+    setMobileOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onEsc);
+    return () => document.removeEventListener("keydown", onEsc);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   const primaryTabs = [
     { id: "inicio", label: "Inicio" },
-    { id: "capitulos", label: "Capítulos" },
     { id: "sobre", label: "Sobre" },
     { id: "creditos", label: "Créditos" },
   ];
+
+  const allTabs = [
+    { id: "inicio", label: "Inicio" },
+    { id: "semillas", label: "Cuidado de la semilla" },
+    { id: "galeria", label: "Personajes fantásticos" },
+    { id: "laboratorio", label: "Monstruos de lava" },
+    { id: "mesa", label: "Juego de autocuidado" },
+    { id: "acuarela", label: "Pintura en acuarela" },
+    { id: "slot", label: "Animalario" },
+    { id: "sobre", label: "Sobre" },
+    { id: "creditos", label: "Créditos" },
+  ];
+  const mobileChapterTabs = allTabs.filter((t) => !["inicio", "sobre", "creditos"].includes(t.id));
 
   return (
     <nav className="sticky top-0 z-50 border-b-2 border-black/10 bg-[#f4f4f6]/90 backdrop-blur">
@@ -142,80 +222,35 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
             <p className="text-xs uppercase tracking-[0.3em] text-[#475569]">Proyecto interactivo</p>
           </div>
         </div>
-        <div className="flex flex-1 items-center justify-center">
+        <div className="hidden flex-1 items-center justify-center md:flex">
           <ul className="flex items-center gap-2 px-1 py-2 text-sm font-semibold text-[#0f172a]" role="tablist">
-          {primaryTabs.map((tab, idx) => {
-            const isChapterButton = tab.id === "capitulos";
-            const isActive = isChapterButton
-              ? chapterTabs.some((chapter) => chapter.id === current)
-              : current === tab.id;
-            const color = SHADOW_COLORS[idx % SHADOW_COLORS.length];
-            return (
-              <li key={tab.id} className="relative">
-                {isActive ? (
-                  <span
-                    className="pointer-events-none absolute inset-0 translate-x-2 translate-y-2 rounded-full"
-                    style={{ backgroundColor: color }}
-                    aria-hidden
-                  />
-                ) : null}
-                {isChapterButton ? (
-                  <div
-                    ref={chapterWrapperRef}
-                    className="relative"
-                    onMouseEnter={() => setChaptersOpen(true)}
-                    onMouseLeave={() => setChaptersOpen(false)}
-                    onFocusCapture={() => setChaptersOpen(true)}
-                    onBlurCapture={(event) => {
-                      const next = event.relatedTarget as Node | null;
-                      if (!next || !chapterWrapperRef.current?.contains(next)) {
-                        setChaptersOpen(false);
-                      }
-                    }}
-                  >
-                    <button
-                      ref={chaptersButtonRef}
-                      type="button"
-                      className={`relative whitespace-nowrap rounded-full border-2 border-black bg-white px-4 py-1.5 transition-transform duration-150 hover:-translate-y-1 ${
-                        isActive ? "font-bold text-[#0f172a]" : "text-[#334155]"
-                      }`}
-                      style={{ boxShadow: `4px 4px 0 ${color}` }}
-                      aria-haspopup="true"
-                      aria-expanded={chaptersOpen}
-                    >
-                      {tab.label}
-                    </button>
-                    {chaptersOpen ? (
-                      <div
-                        ref={popoverRef}
-                        className="absolute right-0 top-[calc(100%+1rem)] z-50 w-[min(640px,calc(100vw-2rem))] rounded-[32px] border-2 border-black bg-white p-5 shadow-[12px_12px_0_#F2AADC]"
-                      >
-                        <p className="mb-4 font-display text-sm font-semibold uppercase tracking-[0.3em] text-[#334155]">
-                          Capítulos
-                        </p>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          {chapterTabs.map((chapter, idx) => {
-                            const color = SHADOW_COLORS[(idx + 1) % SHADOW_COLORS.length];
-                            const isChapterActive = current === chapter.id;
-                            return (
-                              <button
-                                key={chapter.id}
-                                onClick={() => handleChapterSelect(chapter.id)}
-                                className={`sticker-card flex w-full flex-col gap-2 text-left text-sm font-semibold ${
-                                  isChapterActive ? "ring-2 ring-offset-2 ring-offset-white ring-[#0f172a]" : ""
-                                }`}
-                                style={{ "--shadow-color": color } as CSSProperties}
-                              >
-                                <span className="text-xs uppercase tracking-[0.25em] text-[#475569]">{`Capítulo ${idx + 1}`}</span>
-                                <span className="font-display text-base text-[#0f172a]">{chapter.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
+            <li className="relative">
+              <button
+                onClick={() => onChange("inicio")}
+                className={`relative whitespace-nowrap rounded-full border-2 border-black bg-white px-4 py-1.5 transition-transform duration-150 hover:-translate-y-1 ${
+                  current === "inicio" ? "font-bold text-[#0f172a]" : "text-[#334155]"
+                }`}
+                style={{ boxShadow: `4px 4px 0 ${SHADOW_COLORS[0]}` }}
+                aria-current={current === "inicio" ? "page" : undefined}
+                role="tab"
+                aria-selected={current === "inicio"}
+              >
+                Inicio
+              </button>
+            </li>
+            <li className="relative" data-chapters-dropdown>
+              <ChaptersDropdown 
+                current={current} 
+                onChange={onChange} 
+                isOpen={chaptersOpen} 
+                onToggle={toggleChapters} 
+              />
+            </li>
+            {primaryTabs.slice(1).map((tab, idx) => {
+              const isActive = current === tab.id;
+              const color = SHADOW_COLORS[(idx + 2) % SHADOW_COLORS.length];
+              return (
+                <li key={tab.id} className="relative">
                   <button
                     onClick={() => onChange(tab.id)}
                     className={`relative whitespace-nowrap rounded-full border-2 border-black bg-white px-4 py-1.5 transition-transform duration-150 hover:-translate-y-1 ${
@@ -228,10 +263,9 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
                   >
                     {tab.label}
                   </button>
-                )}
-              </li>
-            );
-          })}
+                </li>
+              );
+            })}
           </ul>
         </div>
         <a
@@ -242,7 +276,71 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
         >
           <img src="/LOGO_PP.png" alt="Presupuesto Participativo" className="h-14 w-auto" />
         </a>
+        <button
+          type="button"
+          onClick={toggleMobile}
+          aria-expanded={mobileOpen}
+          aria-label="Abrir menú"
+          className="ml-auto inline-flex items-center justify-center rounded-full border-2 border-black bg-white p-2 shadow-[4px_4px_0_#80C1DD] md:hidden"
+        >
+          {!mobileOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+        </button>
       </div>
+
+      {mobileOpen ? (
+        <>
+          <div
+            className="md:hidden fixed inset-0 z-[60] bg-black/10"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="md:hidden fixed left-0 right-0 top-20 z-[70] mx-3 rounded-[32px] border-2 border-black bg-white p-4 shadow-[10px_10px_0_#C0AAF2]">
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { onChange("inicio"); setMobileOpen(false); }}
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-left font-semibold shadow-[4px_4px_0_#80C1DD]"
+              >
+                Inicio
+              </button>
+              <button
+                onClick={() => { onChange("sobre"); setMobileOpen(false); }}
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-left font-semibold shadow-[4px_4px_0_#F2AADC]"
+              >
+                Sobre
+              </button>
+              <button
+                onClick={() => { onChange("creditos"); setMobileOpen(false); }}
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-left font-semibold shadow-[4px_4px_0_#DCF2AA]"
+              >
+                Créditos
+              </button>
+            </div>
+            <p className="mb-2 font-display text-xs font-semibold uppercase tracking-[0.3em] text-[#334155]">Capítulos</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {mobileChapterTabs.map((chapter, idx) => (
+                <button
+                  key={chapter.id}
+                  onClick={() => { onChange(chapter.id); setMobileOpen(false); }}
+                  className="sticker-card w-full text-left"
+                  style={{ "--shadow-color": SHADOW_COLORS[(idx + 1) % SHADOW_COLORS.length] } as CSSProperties}
+                >
+                  <div className="flex flex-col gap-1 p-3">
+                    <span className="text-[11px] uppercase tracking-[0.25em] text-[#475569]">{`Capítulo ${idx + 1}`}</span>
+                    <span className="font-display text-sm text-[#0f172a]">{chapter.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : null}
     </nav>
   );
 }

@@ -7,6 +7,7 @@ import SemillasSonoras from "@/components/SemillasSonoras";
 import Slot777Vertical from "@/components/slot/Slot777Vertical";
 import LavaLampLab from "@/components/LavaLampLab";
 import AutoCuidadoBoard from "@/components/mesa/AutoCuidadoBoard";
+import ScrollToTopButton from "@/components/ScrollToTopButton";
 
 function Inicio() {
   const sesiones = [
@@ -317,6 +318,7 @@ export default function YoQuieroAprenderApp() {
           </div>
         </div>
       </footer>
+      <ScrollToTopButton />
     </div>
   );
 }
