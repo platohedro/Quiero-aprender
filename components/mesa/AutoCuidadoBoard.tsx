@@ -179,6 +179,65 @@ export default function AutoCuidadoBoard(){
   const [playerMovingToCard, setPlayerMovingToCard] = useState(false);
   const [playerAtCardPosition, setPlayerAtCardPosition] = useState<{x: number, y: number} | null>(null);
 
+  // Interacción móvil: zoom y pan del tablero
+  const [boardScale, setBoardScale] = useState(1);
+  const [boardOffset, setBoardOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const pointersRef = React.useRef<Map<number, { x: number; y: number }>>(new Map());
+  const lastPinchDistRef = React.useRef<number | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const resetView = () => { setBoardScale(1); setBoardOffset({ x: 0, y: 0 }); };
+
+  const getDistance = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const dx = a.x - b.x; const dy = a.y - b.y; return Math.hypot(dx, dy);
+  };
+
+  const centroid = (points: { x: number; y: number }[]) => {
+    const n = points.length; if (n === 0) return { x: 0, y: 0 };
+    return { x: points.reduce((s,p)=>s+p.x,0)/n, y: points.reduce((s,p)=>s+p.y,0)/n };
+  };
+
+  const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    const el = e.currentTarget; el.setPointerCapture?.(e.pointerId);
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  };
+
+  const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    if (!pointersRef.current.has(e.pointerId)) return;
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = Array.from(pointersRef.current.values());
+    if (pts.length === 2) {
+      const d = getDistance(pts[0], pts[1]);
+      if (lastPinchDistRef.current == null) {
+        lastPinchDistRef.current = d;
+        return;
+      }
+      const delta = d - lastPinchDistRef.current;
+      lastPinchDistRef.current = d;
+      const scaleDelta = 1 + delta / 300; // sensibilidad
+      setBoardScale((s) => clamp(s * scaleDelta, 0.6, 2.2));
+    } else if (pts.length === 1) {
+      // Pan
+      const prev = pointersRef.current.get(e.pointerId)!;
+      const dx = e.movementX; const dy = e.movementY;
+      setBoardOffset((o) => ({ x: clamp(o.x + dx, -400, 400), y: clamp(o.y + dy, -400, 400) }));
+    }
+  };
+
+  const onPointerUp: React.PointerEventHandler<HTMLDivElement> = (e) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) lastPinchDistRef.current = null;
+  };
+
+  // Escala inicial según ancho de pantalla (mejora tablet/móvil)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const w = window.innerWidth;
+    const initial = w < 380 ? 0.7 : w < 480 ? 0.78 : w < 768 ? 0.85 : w < 1024 ? 0.92 : 1;
+    setBoardScale(initial);
+  }, []);
+
   const resetBoard = () => { 
     setPos(0); 
     setRolling(false); 
@@ -366,17 +425,17 @@ export default function AutoCuidadoBoard(){
   const pendingMovement = lastRoll ?? dieVal;
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-blue-100 via-green-50 to-blue-100 p-4 overflow-hidden flex flex-col gap-6">
+    <div className="w-full min-h-screen bg-gradient-to-br from-blue-100 via-green-50 to-blue-100 p-3 md:p-4 overflow-hidden flex flex-col gap-4 md:gap-6">
       {/* CONTROLES Y REGISTRO */}
-      <div className="w-full flex flex-col lg:flex-row gap-4">
-        <div className="w-full lg:w-80 space-y-4">
+      <div className="w-full flex flex-col lg:flex-row gap-3 md:gap-4">
+        <div className="w-full lg:w-80 space-y-3 md:space-y-4">
           {/* Panel principal */}
-          <div className="bg-white rounded-2xl p-4 shadow-xl border-3 border-green-300">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl border-3 border-green-300">
+            <div className="flex items-center gap-2 mb-3 md:mb-4">
               <button 
                 onClick={roll} 
                 disabled={rolling || pos >= total - 1 || showQuestion || showAdviceCard} 
-                className="flex-1 px-4 py-2 rounded-xl bg-green-600 text-white disabled:opacity-50 shadow-md hover:bg-green-700 transition-all font-bold text-sm"
+                className="flex-1 px-3 md:px-4 py-2 rounded-xl bg-green-600 text-white disabled:opacity-50 shadow-md hover:bg-green-700 transition-all font-bold text-sm"
               >
                 {rolling ? 'TIRANDO...' : 'TIRAR DADO'}
               </button>
@@ -388,16 +447,16 @@ export default function AutoCuidadoBoard(){
               </button>
             </div>
             
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3 md:mb-4">
               <FancyDie value={dieVal} rolling={rolling} />
             </div>
             
             <div className="text-center">
-              <div className="text-lg font-bold text-green-700">
+              <div className="text-base md:text-lg font-bold text-green-700">
                 Posición: {pos === 0 ? 'INICIO' : BOARD_PATH[pos]?.number} 
               </div>
               {pos === total - 1 && (
-                <div className="mt-2 text-sm font-bold text-green-600 bg-green-50 p-2 rounded-lg">
+                <div className="mt-2 text-xs md:text-sm font-bold text-green-600 bg-green-50 p-2 rounded-lg">
                   🎉 ¡LLEGASTE A LA META!
                 </div>
               )}
@@ -405,8 +464,8 @@ export default function AutoCuidadoBoard(){
           </div>
         </div>
         {/* Registro */}
-        <div className="bg-white rounded-2xl p-4 shadow-xl border-3 border-purple-300 lg:flex-1 max-h-96 overflow-auto">
-          <h3 className="font-bold text-purple-800 mb-2 text-sm">📝 REGISTRO</h3>
+        <div className="bg-white rounded-2xl p-3 md:p-4 shadow-xl border-3 border-purple-300 lg:flex-1 max-h-72 md:max-h-96 overflow-auto">
+          <h3 className="font-bold text-purple-800 mb-2 text-xs md:text-sm">📝 REGISTRO</h3>
           <div className="space-y-1 text-xs">
             {log.map((line: string, i: number) => (
               <div key={i} className="text-gray-700 border-b border-gray-100 pb-1">
@@ -421,23 +480,31 @@ export default function AutoCuidadoBoard(){
       </div>
 
       {/* Tablero principal - SOLO EL JUEGO */}
-      <div className="relative flex-1 min-h-[720px] bg-white rounded-3xl shadow-[0_25px_60px_rgba(15,23,42,0.1)] border-4 border-blue-300 overflow-visible">
-        <div className="absolute inset-0 flex items-center justify-center p-6 md:p-10">
-          <div className="relative w-full h-full max-w-[1200px] mx-auto">
+      <div className="relative flex-1 min-h-[560px] md:min-h-[720px] bg-white rounded-3xl shadow-[0_25px_60px_rgba(15,23,42,0.08)] border-4 border-blue-300 overflow-visible overscroll-contain">
+        <div className="absolute inset-0 flex items-center justify-center p-2 md:p-10">
+          <div
+            ref={containerRef}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            className="relative w-full h-full max-w-[1100px] md:max-w-[1200px] mx-auto touch-none md:touch-auto"
+            style={{ transform: `translate(${boardOffset.x}px, ${boardOffset.y}px) scale(${boardScale})`, transformOrigin: 'center center', transition: pointersRef.current.size ? 'none' : 'transform 120ms ease-out' }}
+          >
             {/* TÍTULO SUPERIOR */}
             
 
             {/* ÁREA CENTRAL - TEMA AUTOCUIDADO */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-gradient-to-br from-white to-blue-50 rounded-full shadow-[0_30px_60px_rgba(59,130,246,0.25)] border-[12px] border-blue-400 flex flex-col items-center justify-center">
-              <div className="text-[6.5rem] mb-4 drop-shadow-sm">🌿</div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 md:w-[30rem] md:h-[30rem] bg-gradient-to-br from-white to-blue-50 rounded-full shadow-[0_24px_48px_rgba(59,130,246,0.22)] md:shadow-[0_30px_60px_rgba(59,130,246,0.25)] border-[10px] md:border-[12px] border-blue-400 flex flex-col items-center justify-center">
+              <div className="text-[4.5rem] md:text-[6.5rem] mb-3 md:mb-4 drop-shadow-sm">🌿</div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-800 mb-1 tracking-wide">AUTOCUIDADO</div>
-                <div className="text-2xl font-semibold text-blue-600">INTEGRAL</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-800 mb-1 tracking-wide">AUTOCUIDADO</div>
+                <div className="text-xl md:text-2xl font-semibold text-blue-600">INTEGRAL</div>
               </div>
             </div>
 
             {/* CASILLAS DEL TABLERO */}
-            <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="absolute inset-0 w-full h-full">
+            <svg viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} className="absolute inset-0 w-full h-full z-0">
               {/* Líneas conectoras */}
               {BOARD_PATH.map((square, i) => {
                 if (i === BOARD_PATH.length - 1) return null;
@@ -531,7 +598,7 @@ export default function AutoCuidadoBoard(){
                 transform: 'translate(-50%, -50%)'
               }}
             >
-              <div className={`w-20 h-20 rounded-full border-[6px] border-white bg-gradient-to-br from-yellow-400 to-orange-500 shadow-2xl flex items-center justify-center text-white text-3xl ${
+              <div className={`w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-[5px] md:border-[6px] border-white bg-gradient-to-br from-yellow-400 to-orange-500 shadow-2xl flex items-center justify-center text-white text-2xl md:text-3xl ${
                 playerMovingToCard ? 'animate-bounce' : ''
               }`}>
                 🧒
@@ -544,11 +611,11 @@ export default function AutoCuidadoBoard(){
             </div>
 
             {/* PILA DE TARJETAS CONSEJOS */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-30" style={{marginLeft: '-180px'}}>
-              <div className="relative scale-[1.35]">
-                <div className="absolute w-24 h-32 bg-blue-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
-                <div className="absolute w-24 h-32 bg-blue-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
-                <div className="relative w-24 h-32 bg-blue-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white cursor-pointer">
+            <div className="block md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-10 pointer-events-none" style={{marginLeft: '-160px'}}>
+              <div className="relative">
+                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-blue-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
+                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-blue-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
+                <div className="relative w-20 h-28 md:w-24 md:h-32 bg-blue-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
                   <div className="text-sm font-bold text-center mb-1">CONSEJOS</div>
                   <div className="text-3xl mb-1">📋</div>
                   <div className="text-xs text-center px-1 leading-tight opacity-90">
@@ -561,11 +628,11 @@ export default function AutoCuidadoBoard(){
             </div>
 
             {/* PILA DE TARJETAS PREGUNTAS */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-6 z-30" style={{marginLeft: '180px'}}>
-              <div className="relative scale-[1.35]">
-                <div className="absolute w-24 h-32 bg-yellow-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
-                <div className="absolute w-24 h-32 bg-yellow-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
-                <div className="relative w-24 h-32 bg-yellow-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white cursor-pointer">
+            <div className="block md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-6 z-10 pointer-events-none" style={{marginLeft: '160px'}}>
+              <div className="relative">
+                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-yellow-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
+                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-yellow-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
+                <div className="relative w-20 h-28 md:w-24 md:h-32 bg-yellow-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
                   <div className="text-sm font-bold text-center mb-1">PREGUNTAS</div>
                   <div className="text-3xl mb-1">❓</div>
                   <div className="text-xs text-center px-1 leading-tight opacity-90">
@@ -576,6 +643,14 @@ export default function AutoCuidadoBoard(){
                 </div>
               </div>
             </div>
+            {/* Botón Reset vista (solo visible en móvil) */}
+            <button
+              onClick={resetView}
+              className="md:hidden absolute bottom-3 right-3 z-50 h-12 w-12 rounded-full border-2 border-black bg-white shadow-[6px_6px_0_#80C1DD] flex items-center justify-center"
+              aria-label="Centrar tablero"
+            >
+              ⤢
+            </button>
           </div>
         </div>
 
