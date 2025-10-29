@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import LavaShaderPanel from "@/components/lava/LavaShaderPanel";
+import { PALETTE } from "@/components/palette";
 
 type Ingredient = {
   id: string;
@@ -17,10 +18,10 @@ type RecipeStep = {
 };
 
 const INGREDIENTS: Ingredient[] = [
-  { id: 'water', name: 'Agua', color: '#3b82f6', icon: '💧', added: false },
-  { id: 'oil', name: 'Aceite', color: '#fbbf24', icon: '🛢️', added: false },
-  { id: 'dye', name: 'Colorante', color: '#ef4444', icon: '🎨', added: false },
-  { id: 'tablet', name: 'Pastilla', color: '#8b5cf6', icon: '💊', added: false },
+  { id: 'water', name: '', color: '#3b82f6', icon: '💧', added: false },
+  { id: 'oil', name: '', color: '#fbbf24', icon: '🛢️', added: false },
+  { id: 'dye', name: '', color: 'rgba(255, 0, 0, 0.15)', icon: '🎨', added: false },
+  { id: 'tablet', name: '', color: 'rgba(255, 0, 0, 0.8)', icon: '💊', added: false },
 ];
 
 const RECIPE_STEPS: RecipeStep[] = [
@@ -991,12 +992,7 @@ export default function LavaLampLab() {
             </div>
             
             {/* Etiqueta del ingrediente que cae */}
-            <div 
-              className="absolute text-xs bg-black/70 text-white px-2 py-1 rounded-full animate-[dropIngredient_1.2s_cubic-bezier(0.25,0.46,0.45,0.94)]"
-              style={{ left: '30%', top: '0px', zIndex: Z_LEVELS.dropping }}
-            >
-              {ingredient.name}
-            </div>
+            {/* Texto del ingrediente eliminado */}
             
             {/* Estela del ingrediente */}
             <div 
@@ -1545,15 +1541,15 @@ export default function LavaLampLab() {
         }
       `}</style>
       
-      <div className="min-h-screen bg-white py-16 px-6 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-20 -left-10 h-64 w-64 rounded-full bg-sky-300/50 blur-3xl"></div>
-        <div className="pointer-events-none absolute top-1/2 -right-16 h-72 w-72 rounded-full bg-rose-300/40 blur-3xl"></div>
+      <div className="min-h-screen bg-white py-8 px-6 relative overflow-visible">
+        <div className="absolute -top-8 -left-10 h-64 w-64 rounded-full bg-red-300/50 blur-3xl"></div>
+        <div className="pointer-events-none absolute top-1/2 -right-16 h-72 w-72 rounded-full bg-red-200/50 blur-3xl"></div>
         <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 h-40 w-96 bg-white/40 blur-2xl"></div>
 
         <div className="max-w-6xl mx-auto relative">
         
         {/* Header del laboratorio */}
-        <div className="text-center mb-10 p-6 lg:p-8 bg-white/80 rounded-3xl shadow-[0_20px_45px_rgba(79,70,229,0.15)] border-4 border-dashed border-purple-300">
+        <div className="text-center mb-10 p-6 lg:p-8 bg-white/80 rounded-3xl border-2 border-black shadow-[6px_6px_0px_0px_#c0aaf2]">
           <div className="flex justify-center gap-4 mb-3 text-4xl">
             <span className="animate-bounce">🧪</span>
             <span className="animate-pulse">🌈</span>
@@ -1567,37 +1563,64 @@ export default function LavaLampLab() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Panel de receta - Arriba en horizontal */}
+        <div className="bg-white/90 rounded-3xl p-6 lg:p-8 border-2 border-black shadow-[6px_6px_0px_0px_#c0aaf2] relative overflow-hidden mb-8">
+          <div className="pointer-events-none absolute top-2 left-6 text-3xl animate-pulse">📎</div>
+          <h2 className="text-2xl font-extrabold text-purple-600 mb-6 text-center">
+            📋 Pasos mágicos
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {RECIPE_STEPS.map((step, index) => (
+              <div 
+                key={step.ingredient}
+                className={`p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_#c0aaf2] ${
+                  currentStep > index 
+                    ? 'bg-emerald-50' 
+                    : currentStep === index 
+                      ? 'bg-amber-50' 
+                      : 'bg-gray-50'
+                }`}
+              >
+                <h3 className="font-bold text-sm mb-1 border-b border-black/20 pb-1 break-words">{step.description}</h3>
+                <p className="text-xs opacity-90 mt-2 break-words">{step.effect}</p>
+                {index < currentStep && (
+                  <div className="text-emerald-500 text-xs mt-1 font-semibold">✨ Completado</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ingredientes y Experimento en dos columnas */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           
           {/* Panel de ingredientes */}
-          <div className="bg-white/80 rounded-3xl p-6 lg:p-7 border-4 border-dashed border-sky-300 shadow-[0_12px_30px_rgba(56,189,248,0.2)] relative overflow-hidden">
+          <div className="bg-white/90 rounded-3xl p-6 lg:p-7 border-2 border-black shadow-[6px_6px_0px_0px_#80c1dd] relative overflow-hidden">
             <div className="pointer-events-none absolute -top-8 -right-12 h-32 w-32 bg-sky-200/70 rotate-12 rounded-full blur-2xl"></div>
             <h2 className="text-2xl font-extrabold text-sky-600 mb-4 text-center tracking-wide">
               🧴 Ingredientes
             </h2>
-            <p className="text-sm text-sky-500 text-center mb-4">Arrastra cada ingrediente al frasco siguiendo el orden de la receta.</p>
-            <div className="grid grid-cols-2 gap-4">
+            <p className="text-xs text-gray-600 text-center mb-6 break-words">Arrastra cada ingrediente al frasco siguiendo el orden de la receta.</p>
+            <div className="grid grid-cols-1 gap-5">
               {ingredients.map((ingredient) => (
                 <div
                   key={ingredient.id}
                   draggable={!ingredient.added}
                   onDragStart={(e) => handleDragStart(e, ingredient.id)}
-                  className={`p-4 rounded-2xl border-4 text-center cursor-move transition-all duration-300 font-semibold tracking-wide ${
+                  className={`p-6 rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_#80c1dd] text-center cursor-move transition-all duration-300 font-semibold tracking-wide ${
                     ingredient.added 
-                      ? 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
-                      : 'bg-white border-sky-300 text-sky-600 hover:scale-105 hover:shadow-lg hover:-rotate-1'
+                      ? 'bg-slate-200 border-black text-slate-400 cursor-not-allowed shadow-inner'
+                      : 'bg-white hover:scale-105 hover:shadow-md border-black'
                   }`}
                 >
-                  <div className="text-4xl mb-2 drop-shadow-sm">{ingredient.icon}</div>
-                  <div>{ingredient.name}</div>
-                  {ingredient.added && <div className="text-emerald-500 text-sm mt-1">¡Listo!</div>}
+                  <div className="text-6xl drop-shadow-sm">{ingredient.icon}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Área del experimento */}
-          <div className="bg-white/80 rounded-3xl p-6 lg:p-7 border-4 border-dashed border-amber-300 shadow-[0_12px_30px_rgba(251,191,36,0.25)] relative">
+          <div className="bg-white/90 rounded-3xl p-6 lg:p-7 border-2 border-black shadow-[6px_6px_0px_0px_#dcf2aa] relative">
             <div className="pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full bg-amber-200/60 blur-xl"></div>
             <div className="pointer-events-none absolute top-3 right-8 text-3xl animate-bounce">🧫</div>
             <h2 className="text-2xl font-extrabold text-amber-600 mb-4 text-center">
@@ -1605,15 +1628,15 @@ export default function LavaLampLab() {
             </h2>
             
             {/* Beaker de laboratorio */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center items-center mb-6 h-[400px]">
               <div className="relative">
                 {/* Beaker principal */}
                 <div 
-                  className="relative w-44 h-56 bg-gradient-to-b from-white/70 via-white/40 to-white/30 shadow-2xl overflow-hidden"
+                  className="relative w-48 h-80 bg-gradient-to-b from-white/70 via-white/40 to-white/30 overflow-hidden"
                   style={{
                     clipPath: 'polygon(15% 0%, 85% 0%, 90% 100%, 10% 100%)',
                     backdropFilter: 'blur(1px)',
-                    border: '3px solid rgba(200, 220, 255, 0.8)',
+                    border: '2px solid black',
                     borderRadius: '8px 8px 12px 12px'
                   }}
                   onDragOver={handleDragOver}
@@ -1662,8 +1685,8 @@ export default function LavaLampLab() {
 
               {lavaBurst && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="absolute h-[118%] w-[118%] rounded-[46%] bg-gradient-to-br from-red-500/10 via-orange-400/5 to-yellow-200/10 blur-3xl animate-[lavaAura_4s_ease-in-out_infinite]" />
-                  <div className="absolute h-[125%] w-[125%] rounded-full border-2 border-dashed border-amber-200/40 animate-[lavaOrbit_6s_linear_infinite]" />
+                  <div className="absolute h-[118%] w-[118%] rounded-[46%] bg-gradient-to-br from-red-500/30 via-red-400/20 to-red-200/20 blur-3xl animate-[lavaAura_4s_ease-in-out_infinite]" />
+                  <div className="absolute h-[125%] w-[125%] rounded-full border-2 border-dashed border-red-200/60 animate-[lavaOrbit_6s_linear_infinite]" />
                   {[...Array(12)].map((_, i) => (
                     <div
                       key={`burst-spark-${i}`}
@@ -1671,7 +1694,7 @@ export default function LavaLampLab() {
                       style={{ transform: `rotate(${i * 30}deg)` }}
                     >
                       <div
-                        className="h-2 w-2 rounded-full bg-gradient-to-br from-yellow-200 to-amber-400 animate-[lavaSpark_2.2s_ease-in-out_infinite]"
+                        className="h-2 w-2 rounded-full bg-gradient-to-br from-red-200 to-red-500 animate-[lavaSpark_2.2s_ease-in-out_infinite]"
                         style={{ animationDelay: `${i * 0.12}s` }}
                       />
                     </div>
@@ -1680,12 +1703,12 @@ export default function LavaLampLab() {
               )}
                 
                 {/* Base del beaker */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-36 h-4 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 rounded-full shadow-lg"></div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-36 h-4 bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 rounded-full border border-black shadow-md"></div>
               </div>
             </div>
 
             {/* Mensaje de estado */}
-            <div className="bg-purple-100/70 border border-purple-200 rounded-2xl p-4 text-center shadow-inner">
+            <div className="bg-white border-2 border-black rounded-2xl p-4 text-center shadow-[4px_4px_0px_0px_#dcf2aa]">
               <p className="text-purple-600 font-semibold text-sm lg:text-base leading-relaxed">{message}</p>
             </div>
 
@@ -1693,38 +1716,13 @@ export default function LavaLampLab() {
             <div className="mt-4 text-center">
               <button
                 onClick={reset}
-                className="bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white font-bold px-6 py-2 rounded-full transition-transform duration-200 shadow-lg hover:-translate-y-0.5"
+                className="bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white font-bold px-6 py-2 rounded-full border-2 border-black transition-transform duration-200 shadow-[4px_4px_0px_0px_#f2aadc] hover:shadow-[2px_2px_0px_0px_#f2aadc] hover:translate-x-[2px] hover:translate-y-[2px]"
               >
                 🔄 ¡Quiero empezar otra vez!
               </button>
             </div>
           </div>
 
-          {/* Panel de receta */}
-          <div className="bg-white/80 rounded-3xl p-6 lg:p-7 border-4 border-dashed border-purple-300 shadow-[0_12px_30px_rgba(192,132,252,0.25)] relative overflow-hidden">
-            <div className="pointer-events-none absolute top-2 left-6 text-3xl animate-pulse">📎</div>
-            <h2 className="text-2xl font-extrabold text-purple-600 mb-4 text-center">
-              📋 Pasos mágicos
-            </h2>
-            <div className="space-y-3">
-              {RECIPE_STEPS.map((step, index) => (
-                <div
-                  key={step.ingredient}
-                  className={`p-3 rounded-2xl border-4 transition-all duration-300 ${
-                    index <= currentStep
-                      ? 'bg-purple-100 border-purple-300 text-purple-600'
-                      : 'bg-white border-slate-200 text-slate-400'
-                  } ${index === currentStep ? 'ring-4 ring-offset-2 ring-pink-200 animate-pulse' : ''}`}
-                >
-                  <div className="font-semibold">{step.description}</div>
-                  <div className="text-sm opacity-80">{step.effect}</div>
-                  {index < currentStep && (
-                    <div className="text-emerald-500 text-sm mt-1 font-semibold">✨ Completado</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Popup de éxito */}

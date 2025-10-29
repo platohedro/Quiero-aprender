@@ -23,8 +23,8 @@ const buildDataset = (count: number, part: 1 | 2 | 3): Parte[] => {
 
 // Detectar cuántos animales hay disponibles inspeccionando la carpeta de cabezas.
 // Para simplicidad en el cliente, establecemos un máximo basado en archivos presentes conocidos.
-// Con las imágenes actuales (1 y 2). Futuro: subir hasta 15 siguiendo el patrón N.1/N.2/N.3.
-const TOTAL_ANIMALES = 2; // actualizar cuando agregues más (p. ej. 15)
+// Con las imágenes actuales (1, 2, 3, 4 y 5). Futuro: subir hasta 15 siguiendo el patrón N.1/N.2/N.3.
+const TOTAL_ANIMALES = 5; // actualizar cuando agregues más (p. ej. 15)
 
 const CABEZAS: Parte[] = buildDataset(TOTAL_ANIMALES, 1);
 const CUERPOS: Parte[] = buildDataset(TOTAL_ANIMALES, 2);
@@ -36,9 +36,9 @@ const machineSlots = [
   { key: "feet" as const, dataset: PIES, duration: 2900 },
 ];
 
-const FALLBACK_WINDOW_SIZE = 250;
-const WINDOW_SIZE_MIN = 220;
-const WINDOW_SIZE_MAX = 280;
+const FALLBACK_WINDOW_SIZE = 180;
+const WINDOW_SIZE_MIN = 160;
+const WINDOW_SIZE_MAX = 200;
 const BUTTON_WIDTH_RATIO = 0.5;
 
 export default function Slot777Vertical() {
@@ -64,7 +64,7 @@ export default function Slot777Vertical() {
       const height = width * 0.6;
       const size = Math.max(
         WINDOW_SIZE_MIN,
-        Math.min(WINDOW_SIZE_MAX, height * 0.28)
+        Math.min(WINDOW_SIZE_MAX, height * 0.22)
       );
       setWindowSize(size);
     };
@@ -206,10 +206,10 @@ export default function Slot777Vertical() {
     }, 3200);
   };
 
-  const framePadding = Math.max(16, windowSize * 0.08);
+  const framePadding = Math.max(12, windowSize * 0.06);
   const frameOuterSize = windowSize + framePadding;
   const buttonWidth = machineWidth ? Math.min(machineWidth * BUTTON_WIDTH_RATIO, 320) : 240;
-  const buttonHeight = machineWidth ? Math.max(60, machineWidth * 0.12) : 66;
+  const buttonHeight = machineWidth ? Math.max(48, machineWidth * 0.10) : 52;
   const messageWidth = machineWidth ? Math.min(machineWidth * 0.7, 360) : undefined;
 
   return (
@@ -234,23 +234,23 @@ export default function Slot777Vertical() {
         }
       `}</style>
 
-      <div className="relative flex w-full max-w-[900px] flex-col items-center rounded-[28px] p-3">
+      <div className="relative flex w-full max-w-[900px] flex-col items-center rounded-[28px] p-2">
         <div
           ref={machineRef}
-          className="relative flex w-full max-w-[620px] flex-col items-center gap-4 rounded-[28px] border border-[rgba(192,170,242,0.25)] px-4 py-4"
+          className="relative flex w-full max-w-[620px] flex-col items-center gap-2 rounded-[28px] border border-[rgba(192,170,242,0.25)] px-3 py-3"
           style={{
         boxShadow:
               "inset 0 0 0 4px rgba(242,170,220,0.16), inset 0 22px 32px rgba(0,0,0,0.45), inset 0 -26px 38px rgba(0,0,0,0.5)",
           }}
         >
           <div className="w-full">
-            <div className="animate-[neonPulse_3.5s_ease-in-out_infinite] rounded-t-[30px] rounded-b-[20px] bg-[linear-gradient(180deg,#C0AAF2_0%,#F2AADC_50%,#80C1DD_100%)] p-[5px]">
+            <div className="animate-[neonPulse_3.5s_ease-in-out_infinite] rounded-t-[20px] rounded-b-[16px] bg-[linear-gradient(180deg,#C0AAF2_0%,#F2AADC_50%,#80C1DD_100%)] p-[4px]">
               <div
-                className="flex h-[50px] w-full items-center justify-center rounded-t-[18px] rounded-b-[12px] px-4"
+                className="flex h-[40px] w-full items-center justify-center rounded-t-[16px] rounded-b-[12px] px-3"
                 style={{
              }}
               >
-                <span className="text-[18px] sm:text-[20px] md:text-[22px] font-semibold uppercase tracking-[0.32em] text-[#FFEAC2]">
+                <span className="text-[16px] sm:text-[18px] md:text-[20px] font-semibold uppercase tracking-[0.28em] text-[#FFEAC2]">
                   ANIMALARIO 
                 </span>
               </div>
@@ -273,18 +273,18 @@ export default function Slot777Vertical() {
           )}
 
           <div
-            className="w-full rounded-[28px] border border-[rgba(192,170,242,0.28)] p-6 shadow-[inset_0_12px_22px_rgba(0,0,0,0.35),inset_0_-20px_32px_rgba(0,0,0,0.52)]"
+            className="w-full rounded-[24px] border border-[rgba(192,170,242,0.28)] p-3 shadow-[inset_0_12px_22px_rgba(0,0,0,0.35),inset_0_-20px_32px_rgba(0,0,0,0.52)]"
             style={{
             }}
           >
-            <div className="flex flex-col items-center gap-2 sm:gap-2">
+            <div className="flex flex-col items-center gap-1.5">
               {machineSlots.map((slot, index) => {
                 const reelSize = windowSize;
                 const outerSize = frameOuterSize;
                 return (
                   <div key={slot.key} className="flex flex-col items-center">
                     <div
-                      className="animate-[neonPulseSoft_4.2s_ease-in-out_infinite] rounded-[24px] border border-[rgba(192,170,242,0.45)] p-[8px]"
+                      className="animate-[neonPulseSoft_4.2s_ease-in-out_infinite] rounded-[20px] border border-[rgba(192,170,242,0.45)] p-[6px]"
                       style={{
                         width: outerSize,
                         height: outerSize,
@@ -295,7 +295,7 @@ export default function Slot777Vertical() {
                       }}
                     >
                       <div
-                        className="flex h-full w-full items-center justify-center rounded-[18px] border border-[rgba(192,170,242,0.25)] "
+                        className="flex h-full w-full items-center justify-center rounded-[16px] border border-[rgba(192,170,242,0.25)] "
                         style={{ width: reelSize, height: reelSize }}
                       >
                         <ReelAnimated
@@ -315,23 +315,23 @@ export default function Slot777Vertical() {
             </div>
           </div>
 
-          <div className="w-full pt-1">
-            <div className="animate-[neonPulse_3.5s_ease-in-out_infinite] rounded-[20px]  p-[1px]">
+          <div className="w-full pt-0.5">
+            <div className="animate-[neonPulse_3.5s_ease-in-out_infinite] rounded-[18px]  p-[1px]">
               <div
-                className="relative flex flex-col items-center justify-center rounded-[20px] py-4"
+                className="relative flex flex-col items-center justify-center rounded-[18px] py-3"
                 style={{
               
            
                 }}
               >
-                <div className="pointer-events-none absolute top-[16px] left-1/2 h-[3px] w-[62%] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#C0AAF2]/40 via-[#C0AAF2]/90 to-[#C0AAF2]/40" />
+                <div className="pointer-events-none absolute top-[12px] left-1/2 h-[2px] w-[62%] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#C0AAF2]/40 via-[#C0AAF2]/90 to-[#C0AAF2]/40" />
 
                 <button
                   type="button"
                   aria-label={running ? "Girando" : "Girar"}
                   disabled={running}
                   onClick={spin}
-                className={`flex items-center justify-center rounded-[28px] border-2 border-[#80C1DD] bg-gradient-to-b from-[#80C1DD] to-[#C0AAF2] px-10 text-[22px] font-bold uppercase tracking-[0.32em] text-[#0f172a] shadow-[0_8px_18px_rgba(128,193,221,0.35),0_0_0_4px_rgba(242,170,220,0.35)] transition-transform duration-150 ease-out focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[4px] focus-visible:outline-[#F2AADC] ${
+                className={`flex items-center justify-center rounded-[24px] border-2 border-[#80C1DD] bg-gradient-to-b from-[#80C1DD] to-[#C0AAF2] px-8 text-[18px] font-bold uppercase tracking-[0.28em] text-[#0f172a] shadow-[0_8px_18px_rgba(128,193,221,0.35),0_0_0_4px_rgba(242,170,220,0.35)] transition-transform duration-150 ease-out focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[4px] focus-visible:outline-[#F2AADC] ${
                     running
                       ? "cursor-wait opacity-60"
                       : "hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(128,193,221,0.55),0_0_0_6px_rgba(192,170,242,0.45)] active:translate-y-0.5"
