@@ -4,6 +4,7 @@ import { ThemedSection, TopNav } from "@/components/themes";
 import GaleriaPersonajes from "@/components/GaleriaPersonajes";
 import Acuarela from "@/components/Acuarela";
 import SemillasSonoras from "@/components/SemillasSonoras";
+import Marimba from "@/components/Marimba";
 import Slot777Vertical from "@/components/slot/Slot777Vertical";
 import LavaLampLab from "@/components/LavaLampLab";
 import AutoCuidadoBoard from "@/components/mesa/AutoCuidadoBoard";
@@ -53,18 +54,14 @@ function Inicio() {
 
   return (
     <div className="space-y-6 text-[#1f2937]">
+      <h2 className="text-base leading-relaxed md:text-lg font-semibold">
+        ¡Hola! Somos las niñas y los niños de Matinée
+      </h2>
       <p className="text-base leading-relaxed md:text-lg">
-        “Yo quiero aprender…” es un libro interactivo creado por más de 100 niñas y niños del proyecto Matinée, una propuesta pedagógica y artística de la Corporación Platohedro. El proceso obtuvo en 2025 el estímulo del Presupuesto Participativo de la Comuna 9 – Buenos Aires, dentro de la línea de narrativas digitales y expresión cultural en Arte, Cultura, Ciencia y Tecnología.
+        Este libro se llama “Yo quiero aprender…” y lo hicimos nosotras y nosotros, más de cien niñas y niños que hacemos parte de Matinée, un espacio donde jugamos, imaginamos y aprendemos juntos en Platohedro.
       </p>
       <p className="text-base leading-relaxed md:text-lg">
-        El libro reúne seis capítulos que recogen los aprendizajes y exploraciones del año: el cuidado de la semilla, la creación de personajes fantásticos, experimentos científicos con monstruos de lava, un juego sobre autocuidado, pintura en acuarela y un animalario vibrante. Cada capítulo resguarda las experiencias, hallazgos y voces creativas de las niñas y los niños que hacen parte del proyecto.
-      </p>
-      <p className="text-base leading-relaxed md:text-lg">
-        Con “Yo quiero aprender…” buscamos potenciar y expandir los procesos creativos y pedagógicos de las infancias que integran Matinée, un espacio que desde 2007 cultiva el encuentro, la imaginación y el aprendizaje colectivo en Platohedro. Hoy lo conforman más de cien participantes entre 5 y 13 años, quienes semana a semana exploran el arte para conocer el mundo y construir comunidad.
-      </p>
-      <p className="text-sm text-[#475569] md:text-base">
-        Desplázate con calma, respira y deja que cada sesión vaya contando la historia. Encontrarás instrucciones
-        suaves en las tarjetas a la izquierda y el laboratorio vivo a la derecha.
+        En el 2025 recibimos una gran noticia: nuestro proyecto ganó el estímulo del Presupuesto Participativo de la Comuna 9 – Buenos Aires, en la línea de Narrativas digitales y expresión cultural en Arte, Cultura, Ciencia y Tecnología. ¡Gracias a eso pudimos crear este libro digital que ahora estás leyendo! 💫
       </p>
       <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {sesiones.map((sesion, index) => (
@@ -212,7 +209,16 @@ export default function YoQuieroAprenderApp() {
             { icon: '🎧', title: 'Escucha atenta', text: 'El ejercicio propone bajar el ritmo, identificar sonidos y compartir lo que evocan.' },
           ]}
         >
-          <SemillasSonoras />
+          <div className="space-y-12">
+            <div>
+              <h4 className="mb-2 font-display text-base font-semibold text-[#0f172a]">Galería de semillas sonoras</h4>
+              <SemillasSonoras />
+            </div>
+            <div>
+              <h4 className="mb-2 font-display text-base font-semibold text-[#0f172a]">Marimba</h4>
+              <Marimba />
+            </div>
+          </div>
         </ThemedSection>
         <ThemedSection
           id="galeria"

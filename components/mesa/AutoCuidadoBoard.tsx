@@ -185,6 +185,10 @@ export default function AutoCuidadoBoard(){
   const pointersRef = React.useRef<Map<number, { x: number; y: number }>>(new Map());
   const lastPinchDistRef = React.useRef<number | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
+  const baseScaleRef = React.useRef<number>(1);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [playerYOffsetPercent, setPlayerYOffsetPercent] = useState(50);
 
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const resetView = () => { setBoardScale(1); setBoardOffset({ x: 0, y: 0 }); };
@@ -235,7 +239,50 @@ export default function AutoCuidadoBoard(){
     if (typeof window === 'undefined') return;
     const w = window.innerWidth;
     const initial = w < 380 ? 0.7 : w < 480 ? 0.78 : w < 768 ? 0.85 : w < 1024 ? 0.92 : 1;
+    baseScaleRef.current = initial;
     setBoardScale(initial);
+    const mq = window.matchMedia('(max-width: 767px)');
+    const apply = () => {
+      setIsSmallScreen(mq.matches);
+      setPlayerYOffsetPercent(mq.matches ? 58 : 50); // ajuste fino para centrar la ficha exactamente sobre la casilla en móvil
+    };
+    apply();
+    mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply as any);
+    return () => {
+      mq.removeEventListener ? mq.removeEventListener('change', apply) : mq.removeListener(apply as any);
+    };
+  }, []);
+
+  // Auto-fit en función del tamaño del wrapper (consistencia entre vistas)
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+    const el = wrapperRef.current;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        // Dimensión base esperada del contenido (coincide con max-w y min-h aproximados)
+        const BASE_W = 1100;
+        const BASE_H = 720;
+        const fitW = (cr.width - 12) / BASE_W;
+        const fitH = (cr.height - 12) / BASE_H;
+        // En pantallas estrechas prioriza llenar ancho
+        const preferWidth = cr.width < 500;
+        const fit = preferWidth ? fitW * 1.05 : Math.min(fitW, fitH);
+        const clampedFit = clamp(fit, 0.7, 1.1);
+        const newBase = clamp(clampedFit, 0.6, 1.05);
+        baseScaleRef.current = newBase;
+        setBoardScale((s) => {
+          // Mantener el factor de usuario (pinch) respecto a base previa
+          const userFactor = s / (baseScaleRef.current || 1);
+          const computed = clamp(newBase * userFactor, 0.65, 2.2);
+          return computed;
+        });
+        // Recentrar si el wrapper cambió tamaño
+        setBoardOffset({ x: 0, y: 0 });
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const resetBoard = () => { 
@@ -480,7 +527,7 @@ export default function AutoCuidadoBoard(){
       </div>
 
       {/* Tablero principal - SOLO EL JUEGO */}
-      <div className="relative flex-1 min-h-[560px] md:min-h-[720px] bg-white rounded-3xl shadow-[0_25px_60px_rgba(15,23,42,0.08)] border-4 border-blue-300 overflow-visible overscroll-contain">
+      <div ref={wrapperRef} className="relative flex-1 min-h-[560px] md:min-h-[720px] bg-white rounded-3xl shadow-[0_25px_60px_rgba(15,23,42,0.08)] border-4 border-blue-300 overflow-visible overscroll-contain">
         <div className="absolute inset-0 flex items-center justify-center p-2 md:p-10">
           <div
             ref={containerRef}
@@ -595,7 +642,7 @@ export default function AutoCuidadoBoard(){
               style={{ 
                 left: `${(displayPlayerPosition.x / SVG_WIDTH) * 100}%`, 
                 top: `${(displayPlayerPosition.y / SVG_HEIGHT) * 100}%`,
-                transform: 'translate(-50%, -50%)'
+                transform: `translate(-50%, -${playerYOffsetPercent}%)`
               }}
             >
               <div className={`w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full border-[5px] md:border-[6px] border-white bg-gradient-to-br from-yellow-400 to-orange-500 shadow-2xl flex items-center justify-center text-white text-2xl md:text-3xl ${
@@ -611,11 +658,11 @@ export default function AutoCuidadoBoard(){
             </div>
 
             {/* PILA DE TARJETAS CONSEJOS */}
-            <div className="block md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-10 pointer-events-none" style={{marginLeft: '-160px'}}>
+            <div className={`block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isSmallScreen ? 'rotate-3' : 'md:rotate-12 rotate-12'} z-10 pointer-events-none`} style={{marginLeft: isSmallScreen ? '-110px' : '-160px'}}>
               <div className="relative">
-                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-blue-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
-                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-blue-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
-                <div className="relative w-20 h-28 md:w-24 md:h-32 bg-blue-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
+                <div className="absolute w-16 h-24 md:w-24 md:h-32 bg-blue-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
+                <div className="absolute w-16 h-24 md:w-24 md:h-32 bg-blue-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
+                <div className="relative w-16 h-24 md:w-24 md:h-32 bg-blue-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
                   <div className="text-sm font-bold text-center mb-1">CONSEJOS</div>
                   <div className="text-3xl mb-1">📋</div>
                   <div className="text-xs text-center px-1 leading-tight opacity-90">
@@ -628,11 +675,11 @@ export default function AutoCuidadoBoard(){
             </div>
 
             {/* PILA DE TARJETAS PREGUNTAS */}
-            <div className="block md:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-6 z-10 pointer-events-none" style={{marginLeft: '160px'}}>
+            <div className={`block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${isSmallScreen ? '-rotate-3' : 'md:-rotate-6 -rotate-6'} z-10 pointer-events-none`} style={{marginLeft: isSmallScreen ? '110px' : '160px'}}>
               <div className="relative">
-                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-yellow-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
-                <div className="absolute w-20 h-28 md:w-24 md:h-32 bg-yellow-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
-                <div className="relative w-20 h-28 md:w-24 md:h-32 bg-yellow-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
+                <div className="absolute w-16 h-24 md:w-24 md:h-32 bg-yellow-400 rounded-lg shadow-lg transform translate-x-1 translate-y-1"></div>
+                <div className="absolute w-16 h-24 md:w-24 md:h-32 bg-yellow-300 rounded-lg shadow-lg transform translate-x-0.5 translate-y-0.5"></div>
+                <div className="relative w-16 h-24 md:w-24 md:h-32 bg-yellow-500 rounded-lg shadow-xl border-2 border-white flex flex-col items-center justify-center text-white">
                   <div className="text-sm font-bold text-center mb-1">PREGUNTAS</div>
                   <div className="text-3xl mb-1">❓</div>
                   <div className="text-xs text-center px-1 leading-tight opacity-90">
