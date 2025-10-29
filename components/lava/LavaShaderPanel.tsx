@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Canvas, extend, ReactThreeFiber, useFrame } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
-import { Color, DataTexture, LinearFilter, RepeatWrapping, RGBAFormat, ShaderMaterial, Texture } from "three";
+import { AdditiveBlending, Color, DataTexture, InstancedMesh, LinearFilter, Matrix4, MeshBasicMaterial, Object3D, RepeatWrapping, RGBAFormat, ShaderMaterial, Texture, Vector3 } from "three";
 
 const vertexShader = `
   varying vec2 vUv;
@@ -18,42 +18,75 @@ const fragmentShader = `
   uniform float time;
   uniform float fogDensity;
   uniform vec3 fogColor;
-  uniform sampler2D texture1;
-  uniform sampler2D texture2;
+  uniform sampler2D texture1; // noise
+  uniform sampler2D texture2; // gradient ramp
   uniform float intensity;
 
   varying vec2 vUv;
 
-  void main() {
+  // cheap fbm using the noise texture
+  float noiseTex(vec2 uv){
+    return texture2D(texture1, uv).r;
+  }
+  float fbm(vec2 uv){
+    float s = 0.0;
+    float a = 0.5;
+    mat2 m = mat2(1.6,1.2,-1.2,1.6);
+    for(int i=0;i<4;i++){
+      s += a * noiseTex(uv);
+      uv = m * uv + 0.07;
+      a *= 0.5;
+    }
+    return s;
+  }
+
+  void main(){
     vec2 uv = vUv;
-    vec4 noise = texture2D(texture1, uv);
+    // keep safe borders inside beaker mask
+    uv = uv * vec2(0.88, 0.96) + vec2(0.06, 0.02);
 
-    vec2 T1 = uv + vec2(1.5, -1.5) * time * 0.02;
-    vec2 T2 = uv + vec2(-0.5, 2.0) * time * 0.01;
+    // Oil background color (warm yellow)
+    vec3 oil = vec3(1.0, 0.89, 0.58);
 
-    T1.x += noise.x * 2.0;
-    T1.y += noise.y * 2.0;
-    T2.x -= noise.y * 0.2;
-    T2.y += noise.z * 0.2;
+    // Flow field that rises over time
+    float speed = mix(0.18, 0.45, clamp(intensity, 0.0, 1.6));
+    vec2 flowUv = vec2(uv.x, uv.y - time * speed);
 
-    float p = texture2D(texture1, T1 * 2.0).a;
+    // Build columns: horizontal sin bands + fbm distort + vertical falloff
+    float columns = sin(flowUv.x * 9.0 + fbm(flowUv * 2.0) * 1.8) * 0.5 + 0.5;
+    columns += fbm(flowUv * 3.0) * 0.45; // blobby
+    columns -= uv.y * 0.85; // push upwards so shapes grow from bottom
 
-    vec4 color = texture2D(texture2, T2 * 2.0);
-    vec4 temp = color * (vec4(p, p, p, p) * 2.0) + (color * color - 0.1);
-    temp.rgb *= 1.1 * intensity;
+    // mask of lava with soft edges; intensity tightens threshold
+    float edge = mix(0.36, 0.48, 1.0 - clamp(intensity * 0.6, 0.0, 0.9));
+    float lavaMask = smoothstep(edge, edge + 0.08, columns);
 
-    if (temp.r > 1.0) { temp.bg += clamp(temp.r - 2.0, 0.0, 100.0); }
-    if (temp.g > 1.0) { temp.rb += temp.g - 1.0; }
-    if (temp.b > 1.0) { temp.rg += temp.b - 1.0; }
+    // Sample gradient by mask for rich reds/oranges
+    vec3 lava = texture2D(texture2, vec2(clamp(lavaMask, 0.0, 1.0), 0.5)).rgb;
 
-    vec4 lavaColor = temp;
+    // Inner glow and rim highlight
+    float rim = smoothstep(0.0, 0.06, abs(dFdx(lavaMask)) + abs(dFdy(lavaMask)));
+    vec3 glow = mix(vec3(0.0), vec3(1.0,0.85,0.4), rim) * 0.35;
 
+    // Tiny bubble speckles rising in the oil
+    vec2 grid = uv * vec2(64.0, 120.0);
+    vec2 cell = floor(grid + vec2(0.0, time * (0.6 + intensity)));
+    float rnd = fract(sin(dot(cell, vec2(12.9898,78.233))) * 43758.5453);
+    float speck = step(0.992, rnd) * smoothstep(0.0, 0.6, fract(grid.y));
+
+    vec3 col = mix(oil, lava, lavaMask);
+    col += glow;
+    col += speck * vec3(1.0);
+    col *= 0.9 + intensity * 0.15;
+
+    // optional very light fog to soften top
     float depth = gl_FragCoord.z / gl_FragCoord.w;
     const float LOG2 = 1.442695;
     float fogFactor = exp2(-fogDensity * fogDensity * depth * depth * LOG2);
     fogFactor = 1.0 - clamp(fogFactor, 0.0, 1.0);
+    vec3 finalCol = mix(col, mix(col, fogColor, 0.1), fogFactor * 0.2);
 
-    gl_FragColor = mix(lavaColor, vec4(fogColor, lavaColor.w), fogFactor);
+    gl_FragColor = vec4(finalCol, 1.0);
   }
 `;
 
@@ -191,6 +224,62 @@ function LavaPlane({ intensity, noiseTexture, colorTexture }: LavaPlaneProps) {
   );
 }
 
+type BubbleFieldProps = {
+  count: number;
+  intensity: number;
+};
+
+function BubbleField({ count, intensity }: BubbleFieldProps) {
+  const meshRef = useRef<InstancedMesh>(null!);
+  const dummy = useMemo(() => new Object3D(), []);
+  const offsets = useMemo(() => {
+    // Pre-generate spawn data to keep animation stable between frames
+    return new Array(count).fill(0).map(() => ({
+      x: (Math.random() - 0.5) * 0.8, // fit inside the beaker mask
+      y: Math.random() * -1.2, // start below
+      s: 0.03 + Math.random() * 0.08, // size
+      speed: 0.15 + Math.random() * 0.45,
+      sway: 0.02 + Math.random() * 0.06,
+      phase: Math.random() * Math.PI * 2,
+    }));
+  }, [count]);
+
+  useEffect(() => {
+    if (!meshRef.current) return;
+    const material = meshRef.current.material as MeshBasicMaterial;
+    material.toneMapped = false;
+    material.transparent = true;
+    material.blending = AdditiveBlending;
+    material.depthWrite = false;
+  }, []);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    const effective = Math.max(0, intensity);
+    for (let i = 0; i < count; i++) {
+      const o = offsets[i];
+      // vertical rise scaled by intensity
+      const y = ((o.y + ((t * (o.speed * (0.6 + effective))) % 2.2)) % 2.2) - 1.2;
+      // lateral sway
+      const x = o.x + Math.sin(t * (0.8 + o.speed) + o.phase) * o.sway * (0.6 + effective);
+      dummy.position.set(x, y, 0);
+      // subtle scale pulsing
+      const scale = o.s * (0.8 + Math.sin(t * 2 + i) * 0.2) * (0.8 + effective * 0.6);
+      dummy.scale.setScalar(scale);
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined as any, undefined as any, count]}>
+      <sphereGeometry args={[1, 12, 12]} />
+      <meshBasicMaterial color={new Color("#ff7a45")} />
+    </instancedMesh>
+  );
+}
+
 type LavaShaderPanelProps = {
   active: boolean;
   intensity?: number;
@@ -207,7 +296,10 @@ export default function LavaShaderPanel({ active, intensity = 1, className }: La
       className={`pointer-events-none transition-opacity duration-700 ${active ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
     >
       <Canvas orthographic camera={{ position: [0, 0, 5], zoom: 180 }} gl={{ alpha: true, antialias: true }} dpr={[1, 1.5]}>
+        {/* Background shadered lava flow */}
         <LavaPlane intensity={effectiveIntensity} noiseTexture={noiseTexture} colorTexture={colorTexture} />
+        {/* Emissive instanced bubbles for depth and sparkle */}
+        <BubbleField count={60} intensity={effectiveIntensity} />
       </Canvas>
     </div>
   );

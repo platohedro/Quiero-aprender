@@ -278,6 +278,7 @@ export default function LavaLampLab() {
   };
 
   const renderJarContent = () => {
+    const USE_R3F_LAVA = true;
     const layers = [];
     const waterLevel = fillProgress.water;
     const oilLevel = fillProgress.oil;
@@ -716,16 +717,17 @@ export default function LavaLampLab() {
           />
         </div>
       );
-      // EFECTO DE LAVA PRINCIPAL - Base burbujeante MUY VISIBLE
-      layers.push(
-        <div key="lava-base" className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-red-800 via-orange-600 to-yellow-500 animate-[colorDiffusion_2s_ease-in-out_infinite]" 
-             style={{
-               clipPath: 'polygon(12% 100%, 88% 100%, 78% 0%, 22% 0%)',
-               opacity: 0.2 + tabletLevel * 0.45,
-               mixBlendMode: 'screen',
-               zIndex: Z_LEVELS.lavaOverlay
-             }}/>
-      );
+      if (!USE_R3F_LAVA) {
+        layers.push(
+          <div key="lava-base" className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-red-800 via-orange-600 to-yellow-500 animate-[colorDiffusion_2s_ease-in-out_infinite]" 
+               style={{
+                 clipPath: 'polygon(12% 100%, 88% 100%, 78% 0%, 22% 0%)',
+                 opacity: 0.2 + tabletLevel * 0.45,
+                 mixBlendMode: 'screen',
+                 zIndex: Z_LEVELS.lavaOverlay
+               }}/>
+        );
+      }
       
       // Etiqueta de LAVA ACTIVA
       layers.push(
@@ -734,8 +736,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Burbujas de lava GRANDES que suben
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div
           key="lava-bubbles-big"
           className="absolute inset-0 overflow-hidden"
@@ -791,8 +792,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Burbujas medianas más rápidas
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div
           key="lava-bubbles-medium"
           className="absolute inset-0 overflow-hidden"
@@ -842,8 +842,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Pequeñas burbujas efervescentes MUY rápidas
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div
           key="effervescent-bubbles"
           className="absolute inset-0 overflow-hidden"
@@ -866,8 +865,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Efecto de ebullición en el fondo
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div key="boiling-effect" className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-red-700 to-transparent animate-pulse" 
              style={{
                clipPath: 'polygon(12% 100%, 88% 100%, 85% 0%, 15% 0%)',
@@ -902,8 +900,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Ondas de calor desde el fondo
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div key="heat-waves" className="absolute bottom-0 left-1/2 transform -translate-x-1/2" style={{ zIndex: Z_LEVELS.lavaOverlay }}>
           {[...Array(5)].map((_, i) => (
             <div key={i} 
@@ -919,8 +916,7 @@ export default function LavaLampLab() {
         </div>
       );
       
-      // Indicador de temperatura
-      layers.push(
+      if (!USE_R3F_LAVA) layers.push(
         <div
           key="temp-indicator"
           className="absolute top-12 right-2 bg-red-700 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg animate-bounce"
