@@ -316,9 +316,9 @@ export default function YoQuieroAprenderApp() {
               className="inline-flex items-center justify-center rounded-[28px] border-2 border-black bg-white px-4 py-2 shadow-[6px_6px_0_#C0AAF2]"
             >
               <img
-                src="/logoALCALDIA.png"
+                src="/ALCALDIA.png"
                 alt="Alcaldía de Medellín"
-                className="h-16 w-auto"
+                className="h-24 w-auto"
               />
             </a>
           </div>

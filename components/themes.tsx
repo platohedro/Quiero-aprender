@@ -272,9 +272,9 @@ export function TopNav({ current, onChange }: { current: string; onChange: (id: 
           href="https://www.medellin.gov.co/es/presupuesto-participativo/"
           target="_blank"
           rel="noreferrer"
-          className="hidden rounded-[32px] border-2 border-black bg-white px-3 py-2 shadow-[6px_6px_0_#80C1DD] md:inline-flex"
+          className="hidden rounded-[32px] border-2 border-black bg-white px-3 pt-3 pb-2 shadow-[6px_6px_0_#80C1DD] md:inline-flex"
         >
-          <img src="/LOGO_PP.png" alt="Presupuesto Participativo" className="h-14 w-auto" />
+          <img src="/PP.png" alt="Presupuesto Participativo" className="h-20 w-auto" />
         </a>
         <button
           type="button"
