@@ -27,24 +27,24 @@ const BOARD_PATH = [
   // Lado inferior - hacia la derecha (15 casillas)
   {x: 140, y: 560, number: '1', color: '#F97316', special: null, text: null}, // 1
   {x: 200, y: 560, number: '2', color: '#F59E0B', special: null, text: null}, // 2
-  {x: 260, y: 560, number: '3', color: '#EAB308', special: null, text: null}, // 3
+  {x: 260, y: 560, number: '3', color: '#EAB308', special: 'challenge', text: null}, // 3
   {x: 320, y: 560, number: '4', color: '#84CC16', special: null, text: null}, // 4
   {x: 380, y: 560, number: '5', color: '#22C55E', special: 'advice', text: null}, // 5
   {x: 440, y: 560, number: '6', color: '#10B981', special: null, text: null}, // 6
-  {x: 500, y: 560, number: '7', color: '#14B8A6', special: null, text: null}, // 7
+  {x: 500, y: 560, number: '7', color: '#14B8A6', special: 'advice', text: null}, // 7
   {x: 560, y: 560, number: '8', color: '#06B6D4', special: null, text: null}, // 8
   {x: 620, y: 560, number: '9', color: '#0EA5E9', special: 'challenge', text: null}, // 9
-  {x: 680, y: 560, number: '10', color: '#3B82F6', special: null, text: null}, // 10
+  {x: 680, y: 560, number: '10', color: '#3B82F6', special: 'challenge', text: null}, // 10
   {x: 740, y: 560, number: '11', color: '#6366F1', special: null, text: null}, // 11
 
   // Lado derecho - subiendo (11 casillas)
   {x: 740, y: 470, number: '12', color: '#8B5CF6', special: null, text: null}, // 12
   {x: 740, y: 420, number: '13', color: '#A855F7', special: 'advice', text: null}, // 13
-  {x: 740, y: 370, number: '14', color: '#C084FC', special: null, text: null}, // 14
+  {x: 740, y: 370, number: '14', color: '#C084FC', special: 'advice', text: null}, // 14
   {x: 740, y: 320, number: '15', color: '#E879F9', special: null, text: null}, // 15
   {x: 740, y: 270, number: '16', color: '#F0ABFC', special: null, text: null}, // 16
   {x: 740, y: 220, number: '17', color: '#22D3EE', special: 'challenge', text: null}, // 17
-  {x: 740, y: 170, number: '18', color: '#06B6D4', special: null, text: null}, // 18
+  {x: 740, y: 170, number: '18', color: '#06B6D4', special: 'challenge', text: null}, // 18
   {x: 740, y: 120, number: '19', color: '#0891B2', special: null, text: null}, // 19
   {x: 740, y: 70, number: '20', color: '#0E7490', special: null, text: null}, // 20
 
@@ -53,11 +53,11 @@ const BOARD_PATH = [
 
   // Lado superior - hacia la izquierda (11 casillas)
   {x: 680, y: 20, number: '22', color: '#FDE047', special: null, text: null}, // 22
-  {x: 620, y: 20, number: '23', color: '#FACC15', special: null, text: null}, // 23
+  {x: 620, y: 20, number: '23', color: '#FACC15', special: 'advice', text: null}, // 23
   {x: 560, y: 20, number: '24', color: '#EAB308', special: 'challenge', text: null}, // 24
   {x: 500, y: 20, number: '25', color: '#CA8A04', special: null, text: null}, // 25
   {x: 440, y: 20, number: '26', color: '#A16207', special: null, text: null}, // 26
-  {x: 380, y: 20, number: '27', color: '#92400E', special: null, text: null}, // 27
+  {x: 380, y: 20, number: '27', color: '#92400E', special: 'challenge', text: null}, // 27
   {x: 320, y: 20, number: '28', color: '#78350F', special: 'advice', text: null}, // 28
   {x: 260, y: 20, number: '29', color: '#451A03', special: null, text: null}, // 29
   {x: 200, y: 20, number: '30', color: '#7C2D12', special: null, text: null}, // 30
@@ -66,14 +66,14 @@ const BOARD_PATH = [
 
   // Lado izquierdo - bajando (11 casillas)
   {x: 80, y: 70, number: '33', color: '#DC2626', special: null, text: null}, // 33
-  {x: 80, y: 120, number: '34', color: '#EF4444', special: null, text: null}, // 34
+  {x: 80, y: 120, number: '34', color: '#EF4444', special: 'advice', text: null}, // 34
   {x: 80, y: 170, number: '35', color: '#F87171', special: 'advice', text: null}, // 35
   {x: 80, y: 220, number: '36', color: '#FCA5A5', special: null, text: null}, // 36
   {x: 80, y: 270, number: '37', color: '#FECACA', special: null, text: null}, // 37
   {x: 80, y: 320, number: '38', color: '#FEE2E2', special: null, text: null}, // 38
   {x: 80, y: 370, number: '39', color: '#FEF2F2', special: 'challenge', text: null}, // 39
   {x: 80, y: 420, number: '40', color: '#FB923C', special: null, text: null}, // 40
-  {x: 80, y: 470, number: '41', color: '#F97316', special: null, text: null}, // 41
+  {x: 80, y: 470, number: '41', color: '#F97316', special: 'challenge', text: null}, // 41
 
   // Últimas casillas hacia la meta
   {x: 140, y: 470, number: '42', color: '#EA580C', special: 'advice', text: null}, // 42
@@ -543,8 +543,58 @@ export default function AutoCuidadoBoard(){
 
             {/* ÁREA CENTRAL - TEMA AUTOCUIDADO */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 md:w-[30rem] md:h-[30rem] bg-gradient-to-br from-white to-blue-50 rounded-full shadow-[0_24px_48px_rgba(59,130,246,0.22)] md:shadow-[0_30px_60px_rgba(59,130,246,0.25)] border-[10px] md:border-[12px] border-blue-400 flex flex-col items-center justify-center">
-              <div className="text-[4.5rem] md:text-[6.5rem] mb-3 md:mb-4 drop-shadow-sm">🌿</div>
-              <div className="text-center">
+              {/* Ilustración central (SVG) */}
+              <svg
+                viewBox="0 0 200 200"
+                className="w-40 h-40 md:w-56 md:h-56 mb-2 md:mb-3 drop-shadow"
+                role="img"
+                aria-label="Ilustración de autocuidado: corazón con hojas"
+              >
+                {/* Fondo suave */}
+                <defs>
+                  <linearGradient id="gradSky" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#E0F2FE" />
+                    <stop offset="100%" stopColor="#BAE6FD" />
+                  </linearGradient>
+                  <linearGradient id="gradHeart" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#FCA5A5" />
+                    <stop offset="100%" stopColor="#EF4444" />
+                  </linearGradient>
+                  <linearGradient id="gradLeaf" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#86EFAC" />
+                    <stop offset="100%" stopColor="#16A34A" />
+                  </linearGradient>
+                </defs>
+
+                <circle cx="100" cy="100" r="86" fill="url(#gradSky)" />
+
+                {/* Corazón */}
+                <path
+                  d="M100 138 C 100 120 62 112 62 80 C 62 60 80 52 96 70 C 100 74 100 74 104 70 C 120 52 138 60 138 80 C 138 112 100 120 100 138 Z"
+                  fill="url(#gradHeart)"
+                  stroke="#B91C1C"
+                  strokeWidth="2.5"
+                />
+
+                {/* Hojas */}
+                <g transform="translate(100,85)">
+                  <ellipse cx="-26" cy="-10" rx="18" ry="10" fill="url(#gradLeaf)" stroke="#166534" strokeWidth="1.5" />
+                  <path d="M-26 -20 C -22 -16 -20 -8 -26 0" stroke="#14532D" strokeWidth="1.5" fill="none" />
+
+                  <ellipse cx="26" cy="-10" rx="18" ry="10" fill="url(#gradLeaf)" stroke="#166534" strokeWidth="1.5" />
+                  <path d="M26 -20 C 22 -16 20 -8 26 0" stroke="#14532D" strokeWidth="1.5" fill="none" />
+                </g>
+
+                {/* Brillos */}
+                <g fill="#FDE68A">
+                  <circle cx="68" cy="52" r="3" />
+                  <circle cx="52" cy="64" r="2" />
+                  <circle cx="136" cy="56" r="3" />
+                  <circle cx="148" cy="70" r="2" />
+                </g>
+              </svg>
+
+              <div className="text-center select-none">
                 <div className="text-2xl md:text-3xl font-bold text-blue-800 mb-1 tracking-wide">AUTOCUIDADO</div>
                 <div className="text-xl md:text-2xl font-semibold text-blue-600">INTEGRAL</div>
               </div>
