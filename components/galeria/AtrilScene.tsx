@@ -123,6 +123,22 @@ function FBXModel({
           if ("alphaTest" in material) {
             material.alphaTest = 0;
           }
+          // Reduce specular hotspots on imported materials
+          if ("roughness" in material && typeof material.roughness === "number") {
+            material.roughness = Math.max(material.roughness, 0.9);
+          }
+          if ("metalness" in material && typeof material.metalness === "number") {
+            material.metalness = Math.min(material.metalness, 0.05);
+          }
+          if ("shininess" in material && typeof material.shininess === "number") {
+            material.shininess = Math.min(material.shininess, 10);
+          }
+          if ("specular" in material && material.specular?.setScalar) {
+            try { material.specular.setScalar(0.1); } catch {}
+          }
+          if ("envMapIntensity" in material && typeof material.envMapIntensity === "number") {
+            material.envMapIntensity = Math.min(material.envMapIntensity, 0.25);
+          }
           if ("needsUpdate" in material) {
             material.needsUpdate = true;
           }
@@ -544,15 +560,23 @@ export default function AtrilScene({
   const focusTarget = frame.target;
 
   return (
-    <div className="relative h-full min-h-[420px] w-full overflow-hidden rounded-3xl border border-brand-lavender/30 bg-[rgba(29,27,41,0.85)]">
+    <div
+      className="relative h-full min-h-[420px] w-full overflow-hidden rounded-3xl border border-brand-lavender/30"
+      style={{
+        backgroundImage: "url('/3d/Fondo_Galeria.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <Canvas
         shadows
         camera={{ position: [0, 2.8, 6.2], fov: 28 }}
         dpr={[1, 1.8]}
         className="h-full w-full"
         style={{ height: "100%", width: "100%" }}
+        gl={{ alpha: true }}
       >
-        <color attach="background" args={["#1c1a2a"]} />
+        {/* Background now handled by parent div image; canvas is transparent */}
         <ambientLight intensity={0.55} color="#f8f9ff" />
         <hemisphereLight intensity={0.85} groundColor={PALETTE.ink} color="#d4ddff" />
         <directionalLight
@@ -637,35 +661,35 @@ export default function AtrilScene({
           <object3D position={[0, focusTarget[1], 0]} />
         </spotLight>
         <CameraRig target={frame.target} height={frame.height} controls={controlsRef} />
-        {/* Luces puntuales que acentúan al personaje activo */}
+        {/* Luces puntuales minimizadas para eliminar hotspot en el centro del personaje */}
         <group>
           <pointLight
             position={[focusTarget[0] + 0.4, focusTarget[1] + 0.9, focusTarget[2] + 0.3]}
             color="#ffe3cb"
-            intensity={3.1}
-            distance={7.4}
-            decay={1.06}
+            intensity={0}
+            distance={1.5}
+            decay={2}
           />
           <pointLight
             position={[focusTarget[0] - 0.6, focusTarget[1] + 0.6, focusTarget[2] - 0.2]}
             color="#e4f2ff"
-            intensity={2.7}
-            distance={6.4}
-            decay={1.12}
+            intensity={0}
+            distance={1.5}
+            decay={2}
           />
           <pointLight
             position={[focusTarget[0], focusTarget[1] + 1.6, focusTarget[2] - 0.8]}
             color="#f4ffe3"
-            intensity={2}
-            distance={7.6}
-            decay={1.05}
+            intensity={0}
+            distance={1.5}
+            decay={2}
           />
           <pointLight
             position={[focusTarget[0], focusTarget[1] + 0.4, focusTarget[2] + 0.6]}
             color="#ebe6ff"
-            intensity={1.8}
-            distance={5.8}
-            decay={1.08}
+            intensity={0}
+            distance={1.2}
+            decay={2}
           />
         </group>
 
