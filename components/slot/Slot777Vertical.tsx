@@ -24,7 +24,7 @@ const buildDataset = (count: number, part: 1 | 2 | 3): Parte[] => {
 // Detectar cuántos animales hay disponibles inspeccionando la carpeta de cabezas.
 // Para simplicidad en el cliente, establecemos un máximo basado en archivos presentes conocidos.
 // Con las imágenes actuales (1, 2, 3, 4 y 5). Futuro: subir hasta 15 siguiendo el patrón N.1/N.2/N.3.
-const TOTAL_ANIMALES = 25; // actualizar cuando agregues más (p. ej. 15)
+const TOTAL_ANIMALES = 25; // actualizar cuando agregues más 
 
 const CABEZAS: Parte[] = buildDataset(TOTAL_ANIMALES, 1);
 const CUERPOS: Parte[] = buildDataset(TOTAL_ANIMALES, 2);
@@ -136,6 +136,7 @@ export default function Slot777Vertical() {
 
   const checkCompleteAnimal = (headIdx: number, bodyIdx: number, feetIdx: number) => {
     // Gana si los tres índices son iguales (mismo animal N) y están dentro del rango
+    //LOGICA DEL GANADOR 
     if (headIdx === bodyIdx && bodyIdx === feetIdx) {
       const n = headIdx + 1;
       return `Animal ${n}`;
