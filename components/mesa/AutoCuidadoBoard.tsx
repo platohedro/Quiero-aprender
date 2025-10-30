@@ -189,6 +189,8 @@ export default function AutoCuidadoBoard(){
   const baseScaleRef = React.useRef<number>(1);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [playerYOffsetPercent, setPlayerYOffsetPercent] = useState(50);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [svgGeom, setSvgGeom] = useState<{ scale: number; offsetX: number; offsetY: number; width: number; height: number }>({ scale: 1, offsetX: 0, offsetY: 0, width: 0, height: 0 });
 
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const resetView = () => { setBoardScale(1); setBoardOffset({ x: 0, y: 0 }); };
@@ -234,22 +236,38 @@ export default function AutoCuidadoBoard(){
     if (pointersRef.current.size < 2) lastPinchDistRef.current = null;
   };
 
-  // Escala inicial según ancho de pantalla (mejora tablet/móvil)
+  // Escala inicial + ajustes responsivos (tablet/móvil) incluyendo offset preciso de ficha
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const w = window.innerWidth;
-    const initial = w < 380 ? 0.7 : w < 480 ? 0.78 : w < 768 ? 0.85 : w < 1024 ? 0.92 : 1;
-    baseScaleRef.current = initial;
-    setBoardScale(initial);
-    const mq = window.matchMedia('(max-width: 767px)');
-    const apply = () => {
-      setIsSmallScreen(mq.matches);
-      setPlayerYOffsetPercent(mq.matches ? 58 : 50); // ajuste fino para centrar la ficha exactamente sobre la casilla en móvil
+    const computeBaseScale = (w: number) => (w < 380 ? 0.7 : w < 480 ? 0.78 : w < 768 ? 0.85 : w < 1024 ? 0.92 : 1);
+    const computeChipYOffset = (_w: number) => 50; // centrar exactamente sobre la casilla en todas las vistas
+    const applyViewport = () => {
+      const w = window.innerWidth;
+      const base = computeBaseScale(w);
+      baseScaleRef.current = base;
+      setBoardScale(base);
+      setPlayerYOffsetPercent(computeChipYOffset(w));
     };
-    apply();
-    mq.addEventListener ? mq.addEventListener('change', apply) : mq.addListener(apply as any);
+
+    // Inicializar y escuchar cambios de tamaño
+    applyViewport();
+    window.addEventListener('resize', applyViewport);
+
+    // Modo móvil (banderas adicionales)
+    const mq = window.matchMedia('(max-width: 767px)');
+    const applyMobile = () => setIsSmallScreen(mq.matches);
+    applyMobile();
+    mq.addEventListener ? mq.addEventListener('change', applyMobile) : mq.addListener(applyMobile as any);
+
+    // Orientación del dispositivo
+    const mo = window.matchMedia('(orientation: portrait)');
+    const applyOrientation = () => setIsPortrait(mo.matches);
+    applyOrientation();
+    mo.addEventListener ? mo.addEventListener('change', applyOrientation) : mo.addListener(applyOrientation as any);
     return () => {
-      mq.removeEventListener ? mq.removeEventListener('change', apply) : mq.removeListener(apply as any);
+      window.removeEventListener('resize', applyViewport);
+      mq.removeEventListener ? mq.removeEventListener('change', applyMobile) : mq.removeListener(applyMobile as any);
+      mo.removeEventListener ? mo.removeEventListener('change', applyOrientation) : mo.removeListener(applyOrientation as any);
     };
   }, []);
 
@@ -283,6 +301,30 @@ export default function AutoCuidadoBoard(){
     });
     ro.observe(el);
     return () => ro.disconnect();
+  }, []);
+
+  // Calcular la geometría visible del SVG dentro del contenedor (para posicionar la ficha con precisión)
+  useEffect(() => {
+    const update = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const w = el.clientWidth; // tamaño sin afectar por transform
+      const h = el.clientHeight;
+      const scale = Math.min(w / SVG_WIDTH, h / SVG_HEIGHT);
+      const contentW = SVG_WIDTH * scale;
+      const contentH = SVG_HEIGHT * scale;
+      const offsetX = (w - contentW) / 2;
+      const offsetY = (h - contentH) / 2;
+      setSvgGeom({ scale, offsetX, offsetY, width: w, height: h });
+    };
+    update();
+    const ro = new ResizeObserver(() => update());
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
   }, []);
 
   const resetBoard = () => { 
@@ -469,6 +511,8 @@ export default function AutoCuidadoBoard(){
   // Posición del jugador (casilla actual o animándose hacia una pila de tarjetas)
   const playerPosition = playerAtCardPosition || currentSquare;
   const displayPlayerPosition = scalePoint(playerPosition);
+  const playerLeftPx = svgGeom.offsetX + displayPlayerPosition.x * svgGeom.scale;
+  const playerTopPx = svgGeom.offsetY + displayPlayerPosition.y * svgGeom.scale;
   const pendingMovement = lastRoll ?? dieVal;
 
   return (
@@ -529,6 +573,15 @@ export default function AutoCuidadoBoard(){
       {/* Tablero principal - SOLO EL JUEGO */}
       <div ref={wrapperRef} className="relative flex-1 min-h-[560px] md:min-h-[720px] bg-white rounded-3xl shadow-[0_25px_60px_rgba(15,23,42,0.08)] border-4 border-blue-300 overflow-visible overscroll-contain">
         <div className="absolute inset-0 flex items-center justify-center p-2 md:p-10">
+          {/* Aviso en móvil en vertical */}
+          {isSmallScreen && isPortrait && (
+            <div className="md:hidden absolute top-3 left-1/2 -translate-x-1/2 z-50">
+              <div className="flex items-center gap-2 bg-yellow-100/95 border-2 border-yellow-400 text-yellow-900 rounded-full px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+                <span className="text-lg">🔄</span>
+                <span className="text-sm font-semibold">Gira tu dispositivo a horizontal para disfrutar mejor</span>
+              </div>
+            </div>
+          )}
           <div
             ref={containerRef}
             onPointerDown={onPointerDown}
@@ -690,8 +743,8 @@ export default function AutoCuidadoBoard(){
                 playerMovingToCard ? 'transition-all duration-1000 ease-in-out' : 'transition-all duration-700 ease-in-out'
               }`}
               style={{ 
-                left: `${(displayPlayerPosition.x / SVG_WIDTH) * 100}%`, 
-                top: `${(displayPlayerPosition.y / SVG_HEIGHT) * 100}%`,
+                left: `${playerLeftPx}px`,
+                top: `${playerTopPx}px`,
                 transform: `translate(-50%, -${playerYOffsetPercent}%)`
               }}
             >
