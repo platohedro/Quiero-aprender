@@ -297,30 +297,77 @@ export default function YoQuieroAprenderApp() {
           <Creditos />
         </ThemedSection>
       </main>
-      <footer className="py-10">
-        <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 text-center text-sm text-gray-600">
-          <p>© {new Date().getFullYear()} Yo Quiero Aprender · Prototipo</p>
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <a
-              href="https://www.terredeshommes.ch/es"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-[28px] border-2 border-black bg-white px-4 py-2 shadow-[6px_6px_0_#BFF49F]"
-            >
-              <img src="/logo TDH.png" alt="Terre des Hommes Schweiz" className="h-16 w-auto" />
-            </a>
-            <a
-              href="https://www.medellin.gov.co"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-[28px] border-2 border-black bg-white px-4 py-2 shadow-[6px_6px_0_#C0AAF2]"
-            >
-              <img
-                src="/ALCALDIA.png"
-                alt="Alcaldía de Medellín"
-                className="h-24 w-auto"
-              />
-            </a>
+      <footer className="bg-white py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-8">
+            <div className="max-w-md">
+              <p className="text-sm text-gray-700 mb-4 text-left">
+                Este proyecto es posible gracias al apoyo de la Alcaldía de Medellín a través del programa de Estímulos para el Arte y la Cultura 2023, en la línea de Narrativas digitales y expresión cultural en Arte, Cultura, Ciencia y Tecnología.
+              </p>
+              <p className="text-xs text-gray-500 text-left">
+                © {new Date().getFullYear()} Yo Quiero Aprender · Prototipo interactivo
+              </p>
+            </div>
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-8">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Organiza</p>
+                  <div className="bg-white p-3 border border-gray-200 rounded-md">
+                    <a
+                      href="https://platohedro.org"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-block"
+                    >
+                      <img
+                        src="/platohedro.png"
+                        alt="Platôhedro"
+                        className="h-20 w-auto"
+                      />
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="h-24 border-l border-gray-300"></div>
+                
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-sm font-medium text-gray-700">Apoya</p>
+                  <div className="flex items-center gap-6">
+                    <div className="bg-white p-3 border border-gray-200 rounded-md">
+                      <a
+                        href="https://www.terredeshommes.ch/es"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-block"
+                      >
+                        <img
+                          src="/logo TDH.png"
+                          alt="Terre des Hommes"
+                          className="h-20 w-auto"
+                        />
+                      </a>
+                    </div>
+                    
+                    <div className="h-20 border-l border-gray-300"></div>
+                    
+                    <div className="bg-white p-3 border border-gray-200 rounded-md">
+                      <a
+                        href="https://www.medellin.gov.co"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="inline-block"
+                      >
+                        <img
+                          src="/ALCALDIA.png"
+                          alt="Alcaldía de Medellín"
+                          className="h-36 w-auto"
+                        />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
