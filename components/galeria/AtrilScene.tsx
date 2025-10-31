@@ -4,7 +4,7 @@ import React, { MutableRefObject, Suspense, useCallback, useEffect, useMemo, use
 import { Canvas, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, OrbitControls, useFBX } from "@react-three/drei";
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { Box3, DoubleSide, Group, OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
+import { Box3, DoubleSide, FrontSide, Group, OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
 import { PALETTE } from "@/components/palette";
 
 type CharacterConfig = {
@@ -109,7 +109,8 @@ function FBXModel({
             return;
           }
           if ("side" in material) {
-            material.side = DoubleSide;
+            // Evita artefactos en el atril (doble cara puede producir self-shadowing y banding)
+            material.side = isAtrilModel ? FrontSide : DoubleSide;
           }
           if ("transparent" in material) {
             material.transparent = false;
@@ -119,6 +120,12 @@ function FBXModel({
           }
           if ("depthWrite" in material) {
             material.depthWrite = true;
+          }
+          // Previene z-fighting sutil en superficies casi coplanares
+          if ("polygonOffset" in material) {
+            material.polygonOffset = true;
+            material.polygonOffsetFactor = isAtrilModel ? 0.5 : 0.2;
+            material.polygonOffsetUnits = isAtrilModel ? 1 : 0.5;
           }
           if ("alphaTest" in material) {
             material.alphaTest = 0;
@@ -586,6 +593,8 @@ export default function AtrilScene({
           color="#ffffff"
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
+          shadow-normalBias={0.5}
+          shadow-bias={-0.00005}
         />
         <directionalLight
           position={[-4.5, 5.5, -3.8]}
@@ -601,7 +610,10 @@ export default function AtrilScene({
           color={PALETTE.rose}
           distance={16}
           decay={1.05}
-          shadow-bias={-0.00016}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-normalBias={0.45}
+          shadow-bias={-0.00006}
         />
         <spotLight
           castShadow
@@ -612,7 +624,10 @@ export default function AtrilScene({
           color={PALETTE.sky}
           distance={16}
           decay={1.05}
-          shadow-bias={-0.00016}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-normalBias={0.45}
+          shadow-bias={-0.00006}
         />
         <spotLight
           castShadow
@@ -623,7 +638,10 @@ export default function AtrilScene({
           color="#fdfbff"
           distance={18}
           decay={1.03}
-          shadow-bias={-0.00011}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-normalBias={0.45}
+          shadow-bias={-0.00005}
         />
         <spotLight
           position={[0, 5.8, -3.5]}
@@ -645,7 +663,8 @@ export default function AtrilScene({
           decay={1.02}
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
-          shadow-bias={-0.00012}
+          shadow-normalBias={0.35}
+          shadow-bias={-0.00005}
         >
           <object3D position={[0, focusTarget[1] + 0.4, 0]} />
         </spotLight>
