@@ -4,7 +4,19 @@ import React, { MutableRefObject, Suspense, useCallback, useEffect, useMemo, use
 import { Canvas, useThree } from "@react-three/fiber";
 import { ContactShadows, Environment, OrbitControls, useFBX } from "@react-three/drei";
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { Box3, DoubleSide, FrontSide, Group, OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
+import {
+  Box3,
+  DoubleSide,
+  FrontSide,
+  Group,
+  OrthographicCamera,
+  PerspectiveCamera,
+  Vector3,
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  SRGBColorSpace,
+  PCFSoftShadowMap,
+} from "three";
 import { PALETTE } from "@/components/palette";
 
 type CharacterConfig = {
@@ -58,6 +70,7 @@ function FBXModel({
   fitHeight?: number;
   onBoundsComputed?: (bounds: { size: Vector3; box: Box3; finalScale: number }) => void;
 }) {
+  const { gl } = useThree();
   const original = useFBX(url);
   const reportedBounds = useRef<string | null>(null);
   const isAtrilModel = useMemo(() => url.toLowerCase().includes("atril"), [url]);
@@ -74,6 +87,10 @@ function FBXModel({
     const footprintMeshes: any[] = [];
 
     clone.updateMatrixWorld(true);
+
+    const maxAniso = typeof (gl as any)?.capabilities?.getMaxAnisotropy === "function"
+      ? (gl as any).capabilities.getMaxAnisotropy()
+      : 8;
 
     clone.traverse((child: any) => {
       if (child.isMesh) {
@@ -108,9 +125,17 @@ function FBXModel({
           if (!material || typeof material !== "object") {
             return;
           }
+          // Preferir sombreado suave y dithering para evitar banding
+          if ("flatShading" in material) material.flatShading = false;
+          if ("dithering" in material) material.dithering = true;
+
           if ("side" in material) {
             // Evita artefactos en el atril (doble cara puede producir self-shadowing y banding)
             material.side = isAtrilModel ? FrontSide : DoubleSide;
+          }
+          // Sólo la cara frontal proyecta sombras para evitar self-shadow en materiales DoubleSide
+          if ("shadowSide" in material) {
+            material.shadowSide = FrontSide;
           }
           if ("transparent" in material) {
             material.transparent = false;
@@ -146,6 +171,27 @@ function FBXModel({
           if ("envMapIntensity" in material && typeof material.envMapIntensity === "number") {
             material.envMapIntensity = Math.min(material.envMapIntensity, 0.25);
           }
+          // Asegurar filtrado/anisotropía en todas las texturas asociadas
+          const maps: any[] = [
+            material.map,
+            material.normalMap,
+            material.roughnessMap,
+            material.metalnessMap,
+            material.alphaMap,
+            material.emissiveMap,
+          ].filter(Boolean);
+          maps.forEach((tex) => {
+            try {
+              tex.anisotropy = Math.max(tex.anisotropy ?? 1, Math.min(8, maxAniso));
+              if ("colorSpace" in tex) {
+                tex.colorSpace = SRGBColorSpace as any;
+              }
+              if (tex.minFilter !== LinearMipmapLinearFilter) tex.minFilter = LinearMipmapLinearFilter;
+              if (tex.magFilter !== LinearFilter) tex.magFilter = LinearFilter;
+              tex.generateMipmaps = true;
+              tex.needsUpdate = true;
+            } catch {}
+          });
           if ("needsUpdate" in material) {
             material.needsUpdate = true;
           }
@@ -154,6 +200,13 @@ function FBXModel({
           child.material.forEach(tuneMaterial);
         } else {
           tuneMaterial(child.material);
+        }
+
+        // Recalcular normales si el FBX viene sin suavizado adecuado
+        if (child.geometry) {
+          try {
+            child.geometry.computeVertexNormals();
+          } catch {}
         }
       }
     });
@@ -576,7 +629,7 @@ export default function AtrilScene({
       }}
     >
       <Canvas
-        shadows
+        shadows={{ type: PCFSoftShadowMap }}
         camera={{ position: [0, 2.8, 6.2], fov: 28 }}
         dpr={[1, 1.8]}
         className="h-full w-full"
