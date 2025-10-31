@@ -1,6 +1,7 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AtrilScene from "@/components/galeria/AtrilScene";
+import { useFBX } from "@react-three/drei";
 
 export type Personaje = { id: string; nombre: string; colores: string[]; descripcion: string };
 
@@ -29,6 +30,21 @@ const MOCK_PERSONAJES: Personaje[] = [
 ];
 
 export default function GaleriaPersonajes() {
+  // Pre-carga de modelos FBX para cambios rápidos entre personajes
+  useEffect(() => {
+    const urls = [
+      "/3d/atril2.fbx",
+      "/3d/personajes/personaje_n1.fbx",
+      "/3d/personajes/personaje2.fbx",
+      "/3d/personajes/personaje3.fbx",
+      "/3d/personajes/personaje4.fbx",
+      "/3d/personajes/personaje5.fbx",
+      "/3d/personajes/personaje6.fbx",
+    ];
+    urls.forEach((u) => {
+      try { (useFBX as any).preload?.(u); } catch {}
+    });
+  }, []);
   const personajesEscena = useMemo<PersonajeEscena[]>(
     () => [
       {

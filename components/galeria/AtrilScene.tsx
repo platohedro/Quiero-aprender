@@ -408,36 +408,53 @@ function CameraRig({
 }) {
   const { camera } = useThree();
 
-  useEffect(() => {
+  // Calcula la posición deseada según el tamaño
+  const desired = useMemo(() => {
     const perspectiveCamera = camera as PerspectiveCamera | OrthographicCamera;
-    if (!(perspectiveCamera instanceof PerspectiveCamera)) {
-      return;
-    }
-
+    const fov = perspectiveCamera instanceof PerspectiveCamera ? perspectiveCamera.fov : 28;
+    const fovRad = (fov * Math.PI) / 180;
     const safeHeight = Math.max(height, 0.8);
     const margin = 1.25;
-    const fovRad = (perspectiveCamera.fov * Math.PI) / 180;
     const coverageDistance = ((safeHeight / 2) / Math.tan(fovRad / 2)) * margin;
     const distance = Math.max(4.2, coverageDistance);
     const lateralOffset = Math.min(Math.max(safeHeight * 0.16, 0.38), 0.95);
     const verticalOffset = Math.max(safeHeight * 0.52, 1.15);
+    return {
+      pos: new Vector3(target[0] + lateralOffset, target[1] + verticalOffset, target[2] + distance),
+      tgt: new Vector3(target[0], target[1], target[2]),
+      distance,
+    };
+  }, [camera, height, target]);
 
-    perspectiveCamera.fov = 28;
-    perspectiveCamera.position.set(
-      target[0] + lateralOffset,
-      target[1] + verticalOffset,
-      target[2] + distance,
-    );
-    perspectiveCamera.lookAt(target[0], target[1], target[2]);
-    perspectiveCamera.updateProjectionMatrix();
-
+  useEffect(() => {
+    const perspectiveCamera = camera as PerspectiveCamera | OrthographicCamera;
+    if (perspectiveCamera instanceof PerspectiveCamera) {
+      perspectiveCamera.fov = 28;
+      perspectiveCamera.updateProjectionMatrix();
+    }
     if (controls?.current) {
-      controls.current.target.set(target[0], target[1], target[2]);
-      controls.current.minDistance = Math.max(distance * 0.55, 2.2);
-      controls.current.maxDistance = distance * 2.2;
+      controls.current.minDistance = Math.max(desired.distance * 0.55, 2.2);
+      controls.current.maxDistance = desired.distance * 2.2;
       controls.current.update();
     }
-  }, [camera, controls, height, target]);
+  }, [camera, controls, desired.distance]);
+
+  // Suaviza movimiento de cámara y target
+  const lerpFactor = 0.12;
+  useThree(({ invalidate }) => invalidate());
+  useEffect(() => {
+    const perspectiveCamera = camera as PerspectiveCamera | OrthographicCamera;
+    if (!(perspectiveCamera instanceof PerspectiveCamera)) return;
+    const id = setInterval(() => {
+      perspectiveCamera.position.lerp(desired.pos, lerpFactor);
+      if (controls?.current) {
+        controls.current.target.lerp(desired.tgt, lerpFactor);
+        controls.current.update();
+      }
+      perspectiveCamera.lookAt(desired.tgt);
+    }, 16);
+    return () => clearInterval(id);
+  }, [camera, controls, desired.pos, desired.tgt]);
 
   return null;
 }
