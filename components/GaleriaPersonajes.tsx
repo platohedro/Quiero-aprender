@@ -40,6 +40,12 @@ export default function GaleriaPersonajes() {
       "/3d/personajes/personaje4.fbx",
       "/3d/personajes/personaje5.fbx",
       "/3d/personajes/personaje6.fbx",
+      "/3d/personajes/personaje7.fbx",
+      "/3d/personajes/personaje8.fbx",
+      "/3d/personajes/personaje9.fbx",
+      "/3d/personajes/personaje10.fbx",
+      "/3d/personajes/personaje11.fbx",
+      "/3d/personajes/personaje12.fbx",
     ];
     urls.forEach((u) => {
       try { (useFBX as any).preload?.(u); } catch {}
@@ -143,6 +149,78 @@ export default function GaleriaPersonajes() {
         ficha: [
           { titulo: "Juego", descripcion: "Le gusta esconderse detrás de notas musicales." },
           { titulo: "Secreto", descripcion: "Sabe encender pequeñas luciérnagas con un susurro." },
+        ],
+      },
+      {
+        id: "personaje7",
+        nombre: "Séptimo Personaje",
+        descripcion: "Nueva forma que llegó con brisa tibia.",
+        model: "/3d/personajes/personaje7.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, Math.PI * 0.03, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Huella", descripcion: "Deja destellos suaves al caminar sobre el atril." },
+        ],
+      },
+      {
+        id: "personaje8",
+        nombre: "Octavo Personaje",
+        descripcion: "Caminante curioso que escucha las paredes.",
+        model: "/3d/personajes/personaje8.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, -Math.PI * 0.02, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Ritmo", descripcion: "Marca el pulso con los dedos como si lloviera." },
+        ],
+      },
+      {
+        id: "personaje9",
+        nombre: "Noveno Personaje",
+        descripcion: "Trae historias guardadas en un bolsillo de luz.",
+        model: "/3d/personajes/personaje9.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, Math.PI * 0.02, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Colección", descripcion: "Reúne palabras que encuentra en los murmullos." },
+        ],
+      },
+      {
+        id: "personaje10",
+        nombre: "Décimo Personaje",
+        descripcion: "Aparece entre reflejos y sombras suaves.",
+        model: "/3d/personajes/personaje10.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, -Math.PI * 0.03, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Afinación", descripcion: "Sintoniza luces para calmar la escena." },
+        ],
+      },
+      {
+        id: "personaje11",
+        nombre: "Undécimo Personaje",
+        descripcion: "Se mueve como una cometa serena.",
+        model: "/3d/personajes/personaje11.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, Math.PI * 0.01, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Brillo", descripcion: "Su voz parece encender pequeñas estrellas." },
+        ],
+      },
+      {
+        id: "personaje12",
+        nombre: "Duodécimo Personaje",
+        descripcion: "Guardián de los silencios cómodos.",
+        model: "/3d/personajes/personaje12.fbx",
+        scale: 9,
+        fitHeight: 2,
+        rotation: [0, -Math.PI * 0.01, 0] as [number, number, number],
+        ficha: [
+          { titulo: "Pausa", descripcion: "Sabe cuándo respirar para escuchar mejor." },
         ],
       },
     ],
