@@ -1,5 +1,11 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/semillas/route": "app/api/semillas/route.js",
   "/page": "app/page.js",
-  "/api/semillas/route": "app/api/semillas/route.js"
+  "/sesiones/acuarela/page": "app/sesiones/acuarela/page.js",
+  "/sesiones/galeria/page": "app/sesiones/galeria/page.js",
+  "/sesiones/laboratorio/page": "app/sesiones/laboratorio/page.js",
+  "/sesiones/mesa/page": "app/sesiones/mesa/page.js",
+  "/sesiones/semillas/page": "app/sesiones/semillas/page.js",
+  "/sesiones/slot/page": "app/sesiones/slot/page.js"
 }

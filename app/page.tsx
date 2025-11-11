@@ -1,5 +1,6 @@
 "use client";
 import React, { CSSProperties, useEffect, useState } from "react";
+import Link from "next/link";
 import { ThemedSection, TopNav } from "@/components/themes";
 import GaleriaPersonajes from "@/components/GaleriaPersonajes";
 import Acuarela from "@/components/Acuarela";
@@ -9,6 +10,18 @@ import Slot777Vertical from "@/components/slot/Slot777Vertical";
 import LavaLampLab from "@/components/LavaLampLab";
 import AutoCuidadoBoard from "@/components/mesa/AutoCuidadoBoard";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+
+const StandaloneButton = ({ id }: { id: string }) => (
+  <div className="mb-6 flex justify-end">
+    <Link
+      href={`/sesiones/${id}`}
+      className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-display font-semibold uppercase tracking-[0.3em] text-[#0f172a] shadow-[4px_4px_0_#DCF2AA] transition-transform duration-150 hover:-translate-y-0.5"
+    >
+      Abrir solo
+      <span aria-hidden>↗</span>
+    </Link>
+  </div>
+);
 
 function Inicio() {
   const sesiones = [
@@ -209,6 +222,7 @@ export default function YoQuieroAprenderApp() {
             { icon: '🎧', title: 'Escucha atenta', text: 'El ejercicio propone bajar el ritmo, identificar sonidos y compartir lo que evocan.' },
           ]}
         >
+          <StandaloneButton id="semillas" />
           <div className="space-y-12">
             <div>
               <h4 className="mb-2 font-display text-base font-semibold text-[#0f172a]">Galería de semillas sonoras</h4>
@@ -227,6 +241,7 @@ export default function YoQuieroAprenderApp() {
           description="De las semillas pasamos a imaginar seres singulares. Esta vitrina 3D reúne personajes creados por las niñas y niños, listos para contar historias nuevas."
         
         >
+          <StandaloneButton id="galeria" />
           <GaleriaPersonajes />
         </ThemedSection>
         <ThemedSection
@@ -240,6 +255,7 @@ export default function YoQuieroAprenderApp() {
             { icon: '🌀', title: 'Observación pausada', text: 'Una experiencia para respirar, enfocarse y narrar lo que sucede dentro del tubo.' },
           ]}
         >
+          <StandaloneButton id="laboratorio" />
           <LavaLampLab />
         </ThemedSection>
         <ThemedSection
@@ -249,6 +265,7 @@ export default function YoQuieroAprenderApp() {
           description="Convertimos las reflexiones en movimiento con un tablero colaborativo. Las casillas proponen retos, preguntas y abrazos que fortalecen el cuidado mutuo."
        
         >
+          <StandaloneButton id="mesa" />
           <AutoCuidadoBoard />
         </ThemedSection>
         <ThemedSection
@@ -258,6 +275,7 @@ export default function YoQuieroAprenderApp() {
           description="El agua, el pigmento y el papel se encuentran en una experiencia que celebra los gestos espontáneos. Esta herramienta digital imita manchas, veladuras y texturas húmedas."
          
         >
+          <StandaloneButton id="acuarela" />
           <Acuarela />
         </ThemedSection>
         <ThemedSection
@@ -271,6 +289,7 @@ export default function YoQuieroAprenderApp() {
             { icon: '🗣️', title: 'Narraciones instantáneas', text: 'Usa cada combinación como disparador para crear relatos colectivos.' },
           ]}
         >
+          <StandaloneButton id="slot" />
           <Slot777Vertical />
         </ThemedSection>
         <ThemedSection

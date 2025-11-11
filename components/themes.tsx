@@ -10,6 +10,7 @@ type ThemedSectionProps = {
   eyebrow?: string;
   description?: string;
   highlights?: Array<{ id?: string; title: string; text: string; icon?: string }>;
+  className?: string;
 };
 
 function HighlightCard({ title, text, icon, index }: { title: string; text: string; icon?: string; index: number }) {
@@ -36,9 +37,16 @@ function HighlightCard({ title, text, icon, index }: { title: string; text: stri
   );
 }
 
-export function ThemedSection({ id, title, children, eyebrow, description, highlights = [] }: ThemedSectionProps) {
+export function ThemedSection({ id, title, children, eyebrow, description, highlights = [], className }: ThemedSectionProps) {
+  const sectionClasses = [
+    "mx-auto mt-24 w-full max-w-6xl scroll-mt-28 px-4 first:mt-12",
+    className ?? "",
+  ]
+    .join(" ")
+    .trim();
+
   return (
-    <section id={id} className="mx-auto mt-24 w-full max-w-6xl scroll-mt-28 px-4 first:mt-12">
+    <section id={id} className={sectionClasses}>
       <header className="mb-10 max-w-4xl space-y-4">
         {eyebrow ? (
           <span className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#111827] shadow-[4px_4px_0_#80C1DD]">
